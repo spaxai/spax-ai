@@ -1,540 +1,1735 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>Spax AI • Chat</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%236d28d9'/><stop offset='0.55' stop-color='%234f46e5'/><stop offset='1' stop-color='%232563eb'/></linearGradient></defs><rect width='100' height='100' rx='24' fill='url(%23g)'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>⧩</text></svg>">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="hmmmd.css">
-  <script src="hmmmd.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Spax AI • Chat</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2318181b'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Arial'>⧩</text></svg>">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<style>
+/* ============ MINIMAL DESIGN SYSTEM ============ */
+:root{
+  --bg:#fafafa; --bg2:#f1f1f2; --surface:#ffffff; --text:#18181b; --text2:#8b8b90;
+  --border:#e8e8ea; --hover:#f3f3f4; --accent:#18181b; --accent-contrast:#ffffff;
+  --danger:#dc2626; --ok:#16a34a; --warn:#d97706;
+  --radius:12px; --sidebar-w:264px; --chat-w:760px; --fs:14px;
+  --shadow:0 10px 34px rgba(0,0,0,.10); --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+body.dark{--bg:#101012; --bg2:#1a1a1e; --surface:#161619; --text:#ececee; --text2:#8f8f96;
+  --border:#26262b; --hover:#1e1e23; --accent:#ececee; --accent-contrast:#111113; --shadow:0 10px 34px rgba(0,0,0,.5);}
+body.accent-blue{--accent:#2563eb;--accent-contrast:#fff}
+body.accent-green{--accent:#16a34a;--accent-contrast:#fff}
+body.accent-purple{--accent:#7c3aed;--accent-contrast:#fff}
+body.accent-orange{--accent:#ea580c;--accent-contrast:#fff}
+body.font-sm{--fs:13px} body.font-lg{--fs:15.5px}
+body.wide-chat{--chat-w:1040px}
+body.high-contrast{--text2:#5b5b60;--border:#c9c9cd}
+body.dark.high-contrast{--text2:#b9b9c0;--border:#3d3d44}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{display:flex;overflow:hidden;background:var(--bg);color:var(--text);
+  font:var(--fs)/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
+  -webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+a{color:var(--accent)}
+.hidden{display:none!important}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:var(--text2)}
+*{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+body.no-anim *,body.reduced-motion *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+body.keyboard-nav :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+kbd{font:600 10.5px var(--mono);background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 5px;color:var(--text2)}
+/* ============ SIDEBAR ============ */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;display:flex;flex-direction:column;background:var(--bg);
+  border-right:1px solid var(--border);transition:margin-left .22s ease;z-index:60}
+body.sidebar-closed .sidebar{margin-left:calc(-1 * var(--sidebar-w))}
+.sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px}
+.sidebar-logo{display:flex;align-items:center;gap:8px;font-weight:650;font-size:14.5px}
+.sidebar-logo-icon{width:26px;height:26px;border-radius:8px;background:var(--accent);color:var(--accent-contrast);
+  display:flex;align-items:center;justify-content:center;font-size:14px}
+.close-sidebar-btn{width:28px;height:28px;border-radius:7px;color:var(--text2)}
+.close-sidebar-btn:hover{background:var(--hover);color:var(--text)}
+.new-chat-btn{margin:8px 12px;display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--border);
+  border-radius:10px;font-size:13px;font-weight:550;background:var(--surface);transition:background .15s}
+.new-chat-btn:hover{background:var(--hover)}
+.new-chat-kbd{margin-left:auto;font:600 10px var(--mono);color:var(--text2)}
+.sidebar-nav-group{padding:2px 12px 6px;display:flex;flex-direction:column;gap:1px}
+.sidebar-nav-btn{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;font-size:13px;
+  color:var(--text2);text-decoration:none;text-align:left;transition:background .15s}
+.sidebar-nav-btn i{width:16px;text-align:center;font-size:12.5px}
+.sidebar-nav-btn:hover{background:var(--hover);color:var(--text)}
+.sidebar-nav-btn.active{background:var(--bg2);color:var(--text);font-weight:550}
+.sidebar-nav-badge{margin-left:auto;font-size:10.5px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:99px;padding:0 7px;color:var(--text2)}
+.sidebar-nav-badge.accent{color:var(--accent);border-color:var(--accent);background:transparent}
+.sidebar-search{margin:4px 12px 8px;display:flex;align-items:center;gap:8px;border:1px solid var(--border);
+  border-radius:9px;padding:6px 10px;color:var(--text2);background:var(--surface)}
+.sidebar-search input{border:none;background:none;outline:none;flex:1;font-size:12.5px;min-width:0}
+.chat-history{flex:1;overflow-y:auto;padding:0 12px 12px}
+.history-label{font-size:10.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin:14px 4px 4px}
+.chat-item{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text2)}
+.chat-item:hover{background:var(--hover);color:var(--text)}
+.chat-item.active{background:var(--bg2);color:var(--text);font-weight:550}
+.chat-item-title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-item-actions{display:none;gap:2px}
+.chat-item:hover .chat-item-actions{display:flex}
+.chat-item-actions button{width:22px;height:22px;border-radius:5px;font-size:10.5px;color:var(--text2)}
+.chat-item-actions button:hover{background:var(--border);color:var(--text)}
+.history-empty{padding:18px 6px;font-size:12px;color:var(--text2);text-align:center}
+.sidebar-footer{border-top:1px solid var(--border);padding:10px 12px;display:flex;align-items:center;gap:8px}
+.google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px;
+  border:1px solid var(--border);border-radius:10px;font-size:12.5px;font-weight:550;background:var(--surface)}
+.google-btn:hover{background:var(--hover)}
+.sidebar-user{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:9px;cursor:pointer;min-width:0}
+.sidebar-user:hover{background:var(--hover)}
+.sidebar-user-name{font-size:12.5px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar{width:26px;height:26px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:13px;overflow:hidden;flex-shrink:0}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.settings-btn-circle{width:34px;height:34px;flex-shrink:0;border:1px solid var(--border);border-radius:50%;
+  color:var(--text2);background:var(--surface);font-size:13px}
+.settings-btn-circle:hover{background:var(--hover);color:var(--text)}
+.signout-dropdown{display:none;position:absolute;bottom:calc(100% + 6px);left:0;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:4px;min-width:150px;z-index:30}
+.signout-dropdown.open{display:block}
+.signout-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:7px;font-size:12.5px;color:var(--danger)}
+.signout-btn:hover{background:var(--hover)}
+.sidebar-overlay,.mobile-preview-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:55}
+.toggle-sidebar-btn{display:none;position:fixed;top:10px;left:10px;z-index:30;width:32px;height:32px;
+  border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text2);font-size:12px}
+.toggle-sidebar-btn:hover{background:var(--hover);color:var(--text)}
+/* ============ MAIN ============ */
+.main-content{flex:1;display:flex;flex-direction:column;min-width:0}
+.chat-header{height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:8px}
+.mobile-menu-btn{display:none;width:32px;height:32px;border-radius:8px;color:var(--text2)}
+.mobile-menu-btn:hover{background:var(--hover)}
+.header-brand-pill{display:flex;align-items:center;gap:8px;font-weight:650;font-size:13.5px}
+.header-brand-icon{width:24px;height:24px;border-radius:7px;background:var(--accent);color:var(--accent-contrast);
+  display:flex;align-items:center;justify-content:center;font-size:12px}
+.header-right{display:flex;align-items:center;gap:12px}
+.top-command-btn{width:32px;height:32px;border-radius:8px;color:var(--text2);font-size:13px}
+.top-command-btn:hover{background:var(--hover);color:var(--text)}
+.connection-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);cursor:pointer;flex-shrink:0}
+.connection-dot.warn{background:var(--warn)}
+.connection-dot.busy{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.messages-container{flex:1;overflow-y:auto;overscroll-behavior:contain}
+.messages-inner{max-width:var(--chat-w);margin:0 auto;padding:26px 20px 20px}
+/* welcome */
+.welcome{display:flex;flex-direction:column;align-items:center;text-align:center;padding:12vh 16px 24px}
+.welcome-logo{width:46px;height:46px;border-radius:14px;background:var(--accent);color:var(--accent-contrast);
+  display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px}
+.welcome h1{font-size:21px;font-weight:650;letter-spacing:-.02em;margin-bottom:6px}
+.welcome p{font-size:13px;color:var(--text2);max-width:420px;margin-bottom:26px}
+.suggestions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:520px}
+.suggestion{border:1px solid var(--border);background:var(--surface);border-radius:11px;padding:11px 13px;
+  font-size:12.5px;color:var(--text2);text-align:left;transition:border-color .15s}
+.suggestion:hover{border-color:var(--text2);color:var(--text)}
+/* messages */
+.msg{display:flex;gap:11px;margin-bottom:22px}
+body.compact-chat .msg{margin-bottom:12px}
+.msg-user{justify-content:flex-end}
+.msg-user .bubble{background:var(--bg2);border-radius:15px;padding:9px 14px;max-width:85%;white-space:pre-wrap;word-break:break-word}
+.msg-ai .msg-avatar{width:26px;height:26px;flex-shrink:0;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:13px;margin-top:2px}
+.msg-body{flex:1;min-width:0}
+.msg-meta{display:flex;align-items:center;gap:4px;margin-top:6px;min-height:22px}
+.msg-time{font-size:10.5px;color:var(--text2);margin-right:4px}
+body:not(.show-timestamps) .msg-time{display:none}
+.msg-action{width:24px;height:24px;border-radius:6px;font-size:11px;color:var(--text2);opacity:0;transition:opacity .15s}
+.msg:hover .msg-action{opacity:1}
+.msg-action:hover{background:var(--hover);color:var(--text)}
+.msg-action.speaking{color:var(--accent);opacity:1}
+.msg-user .msg-meta{justify-content:flex-end}
+.msg-attachments{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.msg-attachments img{width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--border);cursor:zoom-in}
+.file-tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);
+  border:1px solid var(--border);border-radius:7px;padding:3px 8px;background:var(--surface)}
+.msg-error{color:var(--danger)}
+/* markdown */
+.md p{margin:.45em 0} .md p:first-child{margin-top:0} .md p:last-child{margin-bottom:0}
+.md h1,.md h2,.md h3,.md h4{margin:.9em 0 .35em;font-weight:650;letter-spacing:-.01em;line-height:1.3}
+.md h1{font-size:1.3em}.md h2{font-size:1.18em}.md h3{font-size:1.06em}.md h4{font-size:1em}
+.md ul,.md ol{margin:.45em 0;padding-left:1.4em}
+.md li{margin:.2em 0}
+.md blockquote{border-left:2px solid var(--border);padding-left:12px;color:var(--text2);margin:.5em 0}
+.md hr{border:none;border-top:1px solid var(--border);margin:1em 0}
+.md code{font:.88em var(--mono);background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 5px}
+.md a{text-decoration:underline;text-underline-offset:2px}
+.code-block{border:1px solid var(--border);border-radius:11px;overflow:hidden;margin:.65em 0;background:var(--surface)}
+.code-head{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;
+  border-bottom:1px solid var(--border);background:var(--bg2)}
+.code-lang{font:600 10.5px var(--mono);color:var(--text2);text-transform:lowercase}
+.code-actions{display:flex;gap:4px}
+.code-actions button{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);
+  padding:3px 8px;border-radius:6px}
+.code-actions button:hover{background:var(--border);color:var(--text)}
+.code-block pre{padding:12px 14px;overflow-x:auto;font:12.5px/1.6 var(--mono)}
+.code-block pre code{background:none;border:none;padding:0;font:inherit}
+.tok-c{color:var(--text2);font-style:italic}.tok-s{color:#16a34a}.tok-k{color:#7c3aed}
+.tok-n{color:#d97706}.tok-t{color:#2563eb}
+body.dark .tok-s{color:#4ade80}body.dark .tok-k{color:#a78bfa}body.dark .tok-n{color:#fbbf24}body.dark .tok-t{color:#60a5fa}
+.think{border:1px solid var(--border);border-radius:10px;margin-bottom:10px;background:var(--surface)}
+.think summary{cursor:pointer;padding:7px 12px;font-size:11.5px;color:var(--text2);font-weight:550;list-style:none}
+.think summary::before{content:"▸ ";font-size:10px}
+.think[open] summary::before{content:"▾ "}
+.think-body{padding:0 12px 10px;font-size:12px;color:var(--text2);white-space:pre-wrap;max-height:220px;overflow-y:auto}
+.typing-cursor::after{content:"▍";animation:pulse 1s infinite;color:var(--text2)}
+/* ============ COMPOSER ============ */
+.input-container{flex-shrink:0;padding:8px 16px calc(14px + env(safe-area-inset-bottom))}
+.input-wrapper{max-width:var(--chat-w);margin:0 auto;background:var(--surface);border:1px solid var(--border);
+  border-radius:17px;padding:10px 12px 8px;transition:border-color .15s}
+.input-wrapper:focus-within{border-color:var(--text2)}
+.attach-row{display:flex;flex-wrap:wrap;gap:6px;padding:0 2px 8px}
+.attach-chip{display:flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:9px;padding:4px 8px;font-size:11.5px;color:var(--text2);max-width:200px}
+.attach-chip img{width:28px;height:28px;object-fit:cover;border-radius:6px}
+.attach-chip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.attach-chip button{color:var(--text2);font-size:11px;flex-shrink:0}
+.attach-chip button:hover{color:var(--danger)}
+#userInput{width:100%;border:none;background:none;outline:none;resize:none;max-height:200px;
+  padding:2px 4px;font-size:14px;line-height:1.5}
+#userInput::placeholder{color:var(--text2)}
+.input-row-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.composer-left,.composer-right{display:flex;align-items:center;gap:4px}
+.composer-model-wrap{position:relative}
+.model-select-trigger{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:8px;
+  font-size:12px;font-weight:550;color:var(--text2)}
+.model-select-trigger:hover{background:var(--hover);color:var(--text)}
+.upload-btn{width:30px;height:30px;border-radius:8px;color:var(--text2);font-size:13px}
+.upload-btn:hover{background:var(--hover);color:var(--text)}
+.upload-btn.recording{color:var(--danger);animation:pulse 1s infinite}
+.char-counter{font-size:10.5px;color:var(--text2);margin-right:4px;font-variant-numeric:tabular-nums}
+.send-btn{width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--accent-contrast);
+  display:flex;align-items:center;justify-content:center;font-size:13px;transition:opacity .15s}
+.send-btn:disabled{opacity:.3;cursor:default}
+.stop-btn{display:none;width:32px;height:32px;border-radius:50%;border:1.5px solid var(--danger);
+  color:var(--danger);align-items:center;justify-content:center;font-size:11px}
+.model-dropdown{display:none;position:absolute;bottom:calc(100% + 10px);left:0;width:280px;max-height:340px;
+  overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  box-shadow:var(--shadow);padding:6px;z-index:45}
+.model-dropdown.open{display:block}
+.model-group-label{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:650;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--text2);padding:8px 10px 4px}
+.key-dot{width:6px;height:6px;border-radius:50%;background:var(--border)}
+.key-dot.ok{background:var(--ok)}
+.model-item{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:8px;
+  font-size:13px;text-align:left}
+.model-item:hover{background:var(--hover)}
+.model-item .fa-check{margin-left:auto;color:var(--accent);font-size:11px}
+.model-item-sub{font-size:10.5px;color:var(--text2)}
+/* ============ MODALS ============ */
+.settings-modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.38);padding:16px}
+.settings-panel{background:var(--surface);width:min(620px,100%);max-height:min(86vh,800px);
+  border:1px solid var(--border);border-radius:17px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;overflow:hidden}
+.settings-header{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.settings-header h2{font-size:15px;font-weight:650}
+.settings-close-btn{width:30px;height:30px;border-radius:8px;color:var(--text2)}
+.settings-close-btn:hover{background:var(--hover);color:var(--text)}
+.settings-content{overflow-y:auto;padding:16px 20px 24px;flex:1}
+.settings-group{margin-bottom:6px}
+.settings-group-label{font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--text2);margin:20px 2px 6px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 4px;
+  border-radius:9px;cursor:pointer}
+.settings-row:hover{background:var(--hover)}
+.settings-row-left{display:flex;align-items:center;gap:11px;min-width:0}
+.settings-row-icon{width:30px;height:30px;flex-shrink:0;border-radius:8px;background:var(--bg2);
+  display:flex;align-items:center;justify-content:center;font-size:12.5px;color:var(--text2)}
+.settings-row-title{font-size:13.5px;font-weight:500}
+.settings-row-desc{font-size:11.5px;color:var(--text2);line-height:1.35}
+.settings-row-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.settings-row-value{font-size:12.5px;color:var(--text2)}
+.settings-row-chevron{font-size:10px;color:var(--text2)}
+.settings-input-item{margin:6px 2px 4px}
+.settings-input-item label,.auth-input-group label{display:block;font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.settings-input-item input,.auth-input-group input{width:100%;padding:9px 12px;border:1px solid var(--border);
+  border-radius:10px;background:var(--surface);outline:none;font-size:13px}
+.settings-input-item input:focus,.auth-input-group input:focus{border-color:var(--text2)}
+.auth-input-group{margin-bottom:12px}
+.toggle-switch{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--bg2);border:1px solid var(--border);border-radius:99px;
+  transition:background .18s;cursor:pointer}
+.toggle-slider::before{content:"";position:absolute;width:14px;height:14px;left:2px;top:2px;border-radius:50%;
+  background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
+.toggle-switch input:checked + .toggle-slider{background:var(--accent);border-color:var(--accent)}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(16px);background:var(--accent-contrast)}
+.theme-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 12px;
+  border:1px solid var(--border);border-radius:9px;font-size:12.5px;background:var(--surface);color:var(--text2)}
+.theme-btn:hover{background:var(--hover)}
+.theme-btn.active{background:var(--accent);color:var(--accent-contrast);border-color:var(--accent)}
+.swatch{width:22px;height:22px;border-radius:50%;border:1px solid var(--border);cursor:pointer}
+.swatch.active{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.shortcut-list{font-size:12.5px}
+.shortcut-list > div{display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px solid var(--border)}
+.shortcut-list > div:last-child{border-bottom:none}
+.settings-profile-card{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);
+  border-radius:13px;cursor:pointer;position:relative}
+.settings-profile-card:hover{background:var(--hover)}
+.settings-profile-avatar{width:40px;height:40px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;flex-shrink:0}
+.settings-profile-avatar img{width:100%;height:100%;object-fit:cover}
+.settings-profile-name{flex:1;font-weight:600;font-size:14px}
+.settings-profile-arrow{color:var(--text2);font-size:11px}
+.profile-dropdown{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:230px;background:var(--surface);
+  border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:5px;z-index:25}
+.profile-dropdown.open{display:block}
+.profile-dropdown-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;font-size:13px;cursor:pointer}
+.profile-dropdown-item:hover{background:var(--hover)}
+.profile-dropdown-item i{width:15px;color:var(--text2);font-size:12px}
+.profile-dropdown-item.danger,.profile-dropdown-item.danger i{color:var(--danger)}
+.profile-dropdown-divider{height:1px;background:var(--border);margin:4px 6px}
+.provider-card{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px}
+.provider-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.provider-name{font-size:13px;font-weight:600}
+.key-status{font-size:10.5px;color:var(--text2)}
+.key-status.ok{color:var(--ok)}
+.provider-link{margin-left:auto;font-size:11px;color:var(--text2);text-decoration:none}
+.provider-link:hover{color:var(--accent)}
+.key-input-row{display:flex;gap:6px}
+.key-input-row input{flex:1;padding:8px 11px;border:1px solid var(--border);border-radius:9px;
+  background:var(--bg);outline:none;font:12px var(--mono);min-width:0}
+.key-input-row input:focus{border-color:var(--text2)}
+.key-eye{width:34px;border:1px solid var(--border);border-radius:9px;color:var(--text2);font-size:12px}
+.key-eye:hover{background:var(--hover)}
+.custom-extra{display:flex;gap:6px;margin-top:6px}
+.custom-extra input{flex:1;padding:8px 11px;border:1px solid var(--border);border-radius:9px;background:var(--bg);outline:none;font-size:12px;min-width:0}
+.api-note{font-size:11px;color:var(--text2);margin:0 2px 10px;line-height:1.4}
+/* auth */
+.auth-tabs{display:flex;gap:3px;background:var(--bg2);border-radius:11px;padding:3px;margin-bottom:18px}
+.auth-tab-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px;
+  border-radius:8px;font-size:12.5px;font-weight:550;color:var(--text2)}
+.auth-tab-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.auth-tab-pane{display:none}
+.auth-tab-pane.active{display:block}
+.google-brand-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:10px;
+  border:1px solid var(--border);border-radius:11px;font-size:13px;font-weight:550;background:var(--surface)}
+.google-brand-btn:hover{background:var(--hover)}
+.google-brand-btn img{width:16px;height:16px}
+.google-brand-btn:disabled{opacity:.5;cursor:default}
+.auth-divider-line{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--text2);font-size:11px}
+.auth-divider-line::before,.auth-divider-line::after{content:"";flex:1;height:1px;background:var(--border)}
+.auth-hero-icon{width:52px;height:52px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 10px;color:var(--accent)}
+.auth-hint{font-size:11px;color:var(--text2);text-align:center;margin-top:10px;line-height:1.45}
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;
+  background:var(--accent);color:var(--accent-contrast);border-radius:11px;font-weight:600;font-size:13.5px}
+.btn-primary:hover{opacity:.9}
+.btn-ghost{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;
+  border:1px solid var(--border);border-radius:11px;font-size:13px;font-weight:550;background:var(--surface)}
+.btn-ghost:hover{background:var(--hover)}
+.avatar-presets{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.avatar-preset{width:38px;height:38px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--border);
+  font-size:17px;display:flex;align-items:center;justify-content:center}
+.avatar-preset.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--bg2)}
+.modal-avatar-preview{width:70px;height:70px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:30px;overflow:hidden;margin:0 auto 8px}
+.modal-avatar-preview img{width:100%;height:100%;object-fit:cover}
+/* prompts */
+.prompts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.prompt-card{border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left;background:var(--surface)}
+.prompt-card:hover{background:var(--hover)}
+.prompt-card-title{font-size:13px;font-weight:600;margin-bottom:3px;display:flex;gap:7px;align-items:center}
+.prompt-card-title i{color:var(--text2);font-size:12px}
+.prompt-card-desc{font-size:11.5px;color:var(--text2);line-height:1.4}
+/* command palette */
+.command-palette-backdrop{display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.38);
+  justify-content:center;align-items:flex-start;padding:12vh 16px 16px}
+.command-palette-backdrop.open{display:flex}
+.command-palette{width:min(560px,100%);background:var(--surface);border:1px solid var(--border);
+  border-radius:15px;box-shadow:var(--shadow);overflow:hidden}
+.command-search-wrap{display:flex;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid var(--border);color:var(--text2)}
+.command-search-wrap input{flex:1;border:none;background:none;outline:none;font-size:14px;color:var(--text)}
+.command-list{max-height:320px;overflow-y:auto;padding:6px}
+.command-item{display:flex;align-items:center;gap:11px;width:100%;padding:9px 11px;border-radius:9px;font-size:13px;text-align:left}
+.command-item i{width:16px;color:var(--text2);font-size:12.5px}
+.command-item.active{background:var(--bg2)}
+.command-item kbd{margin-left:auto}
+.command-footer{display:flex;align-items:center;gap:6px;padding:9px 15px;border-top:1px solid var(--border);
+  font-size:10.5px;color:var(--text2)}
+.command-footer span{margin-right:6px}
+/* lightbox */
+.image-lightbox{display:none;position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.88);
+  align-items:center;justify-content:center;cursor:zoom-out}
+.image-lightbox.open{display:flex}
+.image-lightbox img{max-width:92vw;max-height:92vh;border-radius:8px}
+.lightbox-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,.12);color:#fff;font-size:15px}
+/* ============ PREVIEW PANEL ============ */
+.preview-panel{display:none;flex-direction:column;width:clamp(380px,44vw,640px);flex-shrink:0;
+  border-left:1px solid var(--border);background:var(--surface);min-width:0}
+body.preview-open .preview-panel{display:flex}
+.preview-topbar{display:flex;align-items:center;justify-content:space-between;height:46px;
+  padding:0 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.preview-brand{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text2);min-width:0}
+.preview-brand strong{color:var(--text);font-weight:600}
+.preview-status{font-size:10.5px;border:1px solid var(--border);border-radius:99px;padding:1px 8px;color:var(--text2)}
+.preview-status.live{color:var(--ok);border-color:var(--ok)}
+.preview-top-actions{display:flex;gap:2px}
+.preview-top-actions button{width:29px;height:29px;border-radius:7px;color:var(--text2);font-size:12px}
+.preview-top-actions button:hover{background:var(--hover);color:var(--text)}
+.preview-top-actions button:disabled{opacity:.35;cursor:default}
+.preview-address-row{display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.preview-file-pill{display:flex;align-items:center;gap:7px;flex:1;min-width:0;background:var(--bg2);
+  border-radius:8px;padding:5px 10px;font:11.5px var(--mono);color:var(--text2)}
+.preview-file-pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preview-device-group{display:flex;gap:2px}
+.preview-device{width:27px;height:27px;border-radius:7px;color:var(--text2);font-size:11.5px}
+.preview-device:hover{background:var(--hover)}
+.preview-device.active{background:var(--bg2);color:var(--text)}
+.preview-auto{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer}
+.preview-workspace{flex:1;display:flex;flex-direction:column;min-height:0}
+.preview-stage{flex:1;overflow:auto;background:var(--bg2);display:flex;align-items:stretch;justify-content:center;padding:0}
+.preview-device-frame{width:100%;height:100%;background:#fff;transition:width .2s,height .2s}
+.preview-device-frame.mobile{width:390px;height:min(720px,calc(100% - 24px));margin:12px auto;border-radius:18px;
+  border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow);flex-shrink:0}
+.preview-device-frame.tablet{width:768px;max-width:calc(100% - 24px);height:min(920px,calc(100% - 24px));
+  margin:12px auto;border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow);flex-shrink:0}
+.preview-frame{width:100%;height:100%;border:none;background:#fff;display:block}
+.preview-console{display:none;height:170px;flex-shrink:0;border-top:1px solid var(--border);flex-direction:column}
+.preview-console.open{display:flex}
+.preview-console-head{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;
+  border-bottom:1px solid var(--border);font-size:11.5px}
+.preview-console-head button{font-size:11px;color:var(--text2);padding:2px 8px;border-radius:5px}
+.preview-console-head button:hover{background:var(--hover)}
+.preview-console-body{flex:1;overflow-y:auto;font:11.5px/1.5 var(--mono)}
+.console-empty{padding:12px;color:var(--text2);font-style:italic}
+.console-line{padding:4px 12px;border-bottom:1px solid var(--border);white-space:pre-wrap;word-break:break-word}
+.console-line.error{color:var(--danger)}
+.console-line.warn{color:var(--warn)}
+.preview-bottom-bar{display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;
+  border-top:1px solid var(--border);font-size:11px;color:var(--text2);flex-shrink:0}
+.preview-bottom-bar span{flex:1;display:flex;align-items:center;gap:6px;min-width:0}
+.preview-bottom-bar button{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);
+  padding:4px 9px;border-radius:7px;border:1px solid var(--border)}
+.preview-bottom-bar button:hover{background:var(--hover);color:var(--text)}
+#previewConsoleCount{background:var(--bg2);border-radius:99px;padding:0 6px;font-size:10px}
+.editor-textarea{width:100%;height:52vh;border:1px solid var(--border);border-radius:11px;background:var(--bg);
+  padding:12px;font:12px/1.6 var(--mono);outline:none;resize:vertical}
+.editor-textarea:focus{border-color:var(--text2)}
+/* toast + confirm */
+.toast{position:fixed;bottom:26px;left:50%;transform:translate(-50%,16px);z-index:120;background:var(--text);
+  color:var(--bg);padding:8px 16px;border-radius:10px;font-size:12.5px;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.confirm-panel{width:min(360px,100%);background:var(--surface);border:1px solid var(--border);border-radius:15px;
+  box-shadow:var(--shadow);padding:20px}
+.confirm-panel p{font-size:13.5px;margin-bottom:16px;line-height:1.5}
+.confirm-actions{display:flex;gap:8px;justify-content:flex-end}
+.confirm-actions button{padding:8px 16px;border-radius:9px;font-size:13px;font-weight:550}
+#confirmCancelBtn{border:1px solid var(--border)}
+#confirmCancelBtn:hover{background:var(--hover)}
+#confirmOkBtn{background:var(--danger);color:#fff}
+/* ============ RESPONSIVE ============ */
+@media (min-width:861px){
+  body:not(.sidebar-closed) .header-brand-pill{display:none}
+  body.sidebar-closed .toggle-sidebar-btn{display:flex;align-items:center;justify-content:center}
+  body.sidebar-closed .chat-header .brand{padding-left:38px}
+}
+@media (max-width:860px){
+  .sidebar{position:fixed;top:0;left:0;bottom:0;margin-left:0!important;transform:translateX(-100%);
+    transition:transform .22s ease;box-shadow:none;width:min(300px,84vw)}
+  body.sidebar-open .sidebar{transform:translateX(0);box-shadow:var(--shadow)}
+  body.sidebar-open .sidebar-overlay{display:block}
+  .mobile-menu-btn{display:flex;align-items:center;justify-content:center}
+  .toggle-sidebar-btn{display:none!important}
+  .settings-modal{padding:0}
+  .settings-panel{width:100%;height:100dvh;max-height:none;border-radius:0;border:none}
+  .preview-panel{position:fixed;inset:0;width:100%;z-index:70;border-left:none}
+  .suggestions,.prompts-grid{grid-template-columns:1fr}
+  .messages-inner{padding:18px 14px}
+  .msg-user .bubble{max-width:92%}
+}
+</style>
 </head>
-<body>
-  <!-- ===== SIDEBAR OVERLAY ===== -->
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
-  <div class="mobile-preview-overlay" id="mobilePreviewOverlay"></div>
-  <input type="file" id="fileUploadInput" style="display:none;" multiple accept="image/*,.pdf,.txt,.js,.py,.html,.css,.json,.md">
+<body class="show-timestamps keyboard-nav">
 
-  <!-- ===== AUTH & PROFILE MODAL ===== -->
-  <div class="settings-modal hidden" id="profileModal" style="z-index: 1000;">
-    <div class="settings-panel" style="max-width: 440px;">
-      <div class="settings-header">
-        <button class="settings-close-btn" id="closeProfileModalBtn"><i class="fas fa-arrow-left"></i></button>
-        <h2 id="profileModalTitle">Sign In & Profile</h2>
-      </div>
-      <div class="settings-content" style="padding: 1.25rem;">
-        
-        <!-- Auth Tabs -->
-        <div class="auth-tabs" id="authTabs">
-          <button type="button" class="auth-tab-btn active" data-tab="google" id="tabBtnGoogle">
-            <i class="fab fa-google"></i> Google
-          </button>
-          <button type="button" class="auth-tab-btn" data-tab="email" id="tabBtnEmail">
-            <i class="fas fa-envelope"></i> Email
-          </button>
-          <button type="button" class="auth-tab-btn" data-tab="profile" id="tabBtnProfile">
-            <i class="fas fa-user-pen"></i> Profile
-          </button>
-        </div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="mobile-preview-overlay" id="mobilePreviewOverlay"></div>
+<input type="file" id="fileUploadInput" style="display:none" multiple accept="image/*,.pdf,.txt,.js,.py,.html,.css,.json,.md">
 
-        <!-- TAB 1: GOOGLE SIGN IN -->
-        <div class="auth-tab-pane active" id="paneGoogle">
-          <div style="text-align:center;margin-bottom:1.25rem;">
-            <div style="width:3.5rem;height:3.5rem;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:1.7rem;margin:0 auto 0.75rem;border:1px solid var(--border);color:var(--accent);">
-              <i class="fab fa-google"></i>
-            </div>
-            <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:0.35rem;">Sign In with Google</h3>
-            <p style="font-size:0.8rem;color:var(--text2);line-height:1.4;">Access all models, sync conversations and settings automatically with your Google account.</p>
-          </div>
-
-          <div id="gsiButtonContainer" style="display:flex;justify-content:center;margin-bottom:0.75rem;min-height:44px;"></div>
-
-          <button type="button" class="google-brand-btn" id="googleDirectBtn">
-            <img src="https://www.google.com/favicon.ico" alt="Google">
-            <span>Continue with Google One-Tap</span>
-          </button>
-
-          <div class="auth-divider-line"><span>or enter email</span></div>
-
-          <button type="button" id="switchToEmailTabBtn" style="width:100%;padding:0.7rem;background:var(--bg-hover);border:1px solid var(--border);border-radius:0.75rem;color:var(--text);font-size:0.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
-            <i class="fas fa-envelope"></i> Sign in with Email & Password
-          </button>
-        </div>
-
-        <!-- TAB 2: EMAIL SIGN IN / REGISTER -->
-        <div class="auth-tab-pane" id="paneEmail">
-          <div style="margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">
-            <h3 id="emailFormHeader" style="font-size:1rem;font-weight:700;">Account Sign In</h3>
-            <button type="button" id="authModeToggleBtn" style="background:none;border:none;color:var(--accent);font-size:0.8rem;font-weight:600;cursor:pointer;">Need an account? Register</button>
-          </div>
-
-          <div class="auth-input-group" id="registerNameGroup" style="display:none;">
-            <label for="authNameInput">Full Name</label>
-            <input type="text" id="authNameInput" placeholder="Your name (e.g. Batbleseed)">
-          </div>
-
-          <div class="auth-input-group">
-            <label for="authEmailInput">Email Address</label>
-            <input type="email" id="authEmailInput" placeholder="name@example.com" required autocomplete="email">
-          </div>
-
-          <div class="auth-input-group">
-            <label for="authPasswordInput">Password</label>
-            <input type="password" id="authPasswordInput" placeholder="••••••••" required autocomplete="current-password">
-          </div>
-
-          <button type="button" id="emailAuthSubmitBtn" style="width:100%;margin-top:0.5rem;padding:0.75rem;background:var(--accent);color:var(--accent-contrast);border:none;border-radius:0.75rem;font-weight:600;font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
-            <i class="fas fa-right-to-bracket"></i> <span id="emailAuthBtnText">Sign In</span>
-          </button>
-
-          <div style="margin-top:0.75rem;display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text2);">
-            <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
-              <input type="checkbox" id="rememberMeCheckbox" checked> Remember me
-            </label>
-            <span id="quickFillDemoBtn" style="color:var(--accent);cursor:pointer;">Quick Fill Demo</span>
-          </div>
-        </div>
-
-        <!-- TAB 3: PROFILE CUSTOMIZATION -->
-        <div class="auth-tab-pane" id="paneProfile">
-          <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.25rem;gap:0.5rem;">
-            <div id="modalAvatarPreview" style="width:4.5rem;height:4.5rem;border-radius:50%;background:var(--accent);color:var(--accent-contrast);display:flex;align-items:center;justify-content:center;font-size:1.8rem;overflow:hidden;border:2px solid var(--border);box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-              <i class="fas fa-user"></i>
-            </div>
-            <span style="font-size:0.8rem;color:var(--text2);">Choose your avatar and display name</span>
-          </div>
-
-          <div style="margin-bottom:1.2rem;">
-            <label style="font-size:0.75rem;font-weight:600;color:var(--text2);display:block;margin-bottom:0.5rem;">Preset Avatars</label>
-            <div id="avatarPresetsList" style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;"></div>
-          </div>
-
-          <div class="auth-input-group">
-            <label for="profileNameInput">Display Name</label>
-            <input type="text" id="profileNameInput" placeholder="e.g. Batbleseed">
-          </div>
-
-          <div class="auth-input-group" style="margin-bottom:1.25rem;">
-            <label for="profileAvatarUrlInput">Custom Avatar Image URL (Optional)</label>
-            <input type="url" id="profileAvatarUrlInput" placeholder="https://... direct image link">
-          </div>
-
-          <div style="display:flex;gap:0.6rem;">
-            <button id="saveProfileModalBtn" style="flex:1;padding:0.75rem;background:var(--accent);color:var(--accent-contrast);border:none;border-radius:0.75rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.9rem;">
-              <i class="fas fa-check"></i> Save Profile
-            </button>
-            <button id="quickGuestLoginBtn" type="button" style="padding:0.75rem 1rem;background:var(--bg-hover);border:1.5px solid var(--border);border-radius:0.75rem;color:var(--text);font-size:0.85rem;font-weight:500;cursor:pointer;">
-              Reset
-            </button>
-          </div>
-        </div>
-
-      </div>
+<!-- ===== PROFILE / AUTH MODAL ===== -->
+<div class="settings-modal hidden" id="profileModal" style="z-index:85">
+  <div class="settings-panel" style="max-width:440px">
+    <div class="settings-header">
+      <button class="settings-close-btn" id="closeProfileModalBtn" aria-label="Close"><i class="fas fa-arrow-left"></i></button>
+      <h2 id="profileModalTitle">Sign In & Profile</h2>
     </div>
-  </div>
-
-  <!-- ===== SETTINGS MODAL ===== -->
-  <div class="settings-modal hidden" id="settingsModal">
-    <div class="settings-panel">
-      <div class="settings-header">
-        <button class="settings-close-btn" id="closeSettingsBtn"><i class="fas fa-arrow-left"></i></button>
-        <h2>Settings</h2>
+    <div class="settings-content">
+      <div class="auth-tabs" id="authTabs">
+        <button type="button" class="auth-tab-btn active" data-tab="google" id="tabBtnGoogle"><i class="fab fa-google"></i> Google</button>
+        <button type="button" class="auth-tab-btn" data-tab="email" id="tabBtnEmail"><i class="fas fa-envelope"></i> Email</button>
+        <button type="button" class="auth-tab-btn" data-tab="profile" id="tabBtnProfile"><i class="fas fa-user-pen"></i> Profile</button>
       </div>
 
-      <div class="settings-content">
-        <!-- Profile Card -->
-        <div class="settings-profile-card" id="settingsProfileCard" style="position:relative;">
-          <div class="settings-profile-avatar" id="settingsProfileAvatar"><i class="fas fa-user"></i></div>
-          <div class="settings-profile-name" id="settingsProfileName">Guest User</div>
-          <div class="settings-profile-arrow"><i class="fas fa-chevron-right"></i></div>
-          <div class="profile-dropdown" id="profileDropdown">
-            <div class="profile-dropdown-item" id="profileSignInItem"><i class="fas fa-user-pen"></i> Edit Profile & Sign In</div>
-            <div class="profile-dropdown-item" id="profileEditNameItem"><i class="fas fa-pen"></i> Quick Name Change</div>
-            <div class="profile-dropdown-divider"></div>
-            <div class="profile-dropdown-item danger" id="profileSignOutItem"><i class="fas fa-right-from-bracket"></i> Sign out</div>
-          </div>
+      <div class="auth-tab-pane active" id="paneGoogle">
+        <div style="text-align:center;margin-bottom:18px">
+          <div class="auth-hero-icon"><i class="fab fa-google"></i></div>
+          <h3 style="font-size:15px;font-weight:650;margin-bottom:4px">Sign in with Google</h3>
+          <p style="font-size:12px;color:var(--text2)">Save your profile identity with your Google account.</p>
         </div>
-
-        <!-- General Section -->
-        <div class="settings-group">
-          <div class="settings-group-label">General</div>
-
-          <div class="settings-row" id="themeRow">
-            <div class="settings-row-left">
-              <div class="settings-row-icon"><i class="fas fa-sun"></i></div>
-              <div class="settings-row-text">
-                <div class="settings-row-title">Theme</div>
-              </div>
-            </div>
-            <div class="settings-row-right">
-              <span class="settings-row-value" id="themeValue">Light</span>
-              <i class="fas fa-chevron-down settings-row-chevron"></i>
-            </div>
-          </div>
-          <div id="themeDropdown" style="display:none;padding:0.3rem 0 0 0;">
-            <div style="display:flex;gap:0.5rem;">
-              <button class="theme-btn active" data-theme="default" style="flex:1;"><i class="fas fa-sun"></i> Light</button>
-              <button class="theme-btn" data-theme="dark" style="flex:1;"><i class="fas fa-moon"></i> Dark</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- API Keys Section -->
-        <div class="settings-group">
-          <div class="settings-group-label">API Keys</div>
-          <div style="font-size:0.72rem;color:#666;padding-left:0.2rem;margin-bottom:0.3rem;">Stored securely in your browser's local storage</div>
-          <div id="providerCards"></div>
-        </div>
-
-        <!-- Features Section -->
-        <div class="settings-group">
-          <div class="settings-group-label">Features</div>
-
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="settings-row-icon"><i class="fas fa-code"></i></div>
-              <div class="settings-row-text">
-                <div class="settings-row-title">HTML Preview</div>
-                <div class="settings-row-desc">Display HTML content in a preview panel</div>
-              </div>
-            </div>
-            <div class="settings-row-right">
-              <label class="toggle-switch">
-                <input type="checkbox" id="previewToggle" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="settings-row">
-            <div class="settings-row-left">
-              <div class="settings-row-icon"><i class="fas fa-shield-halved"></i></div>
-              <div class="settings-row-text">
-                <div class="settings-row-title">CORS Proxy</div>
-                <div class="settings-row-desc">Use proxy for cross-origin requests</div>
-              </div>
-            </div>
-            <div class="settings-row-right">
-              <label class="toggle-switch">
-                <input type="checkbox" id="proxyToggle">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="settings-input-item" style="padding:0 0.2rem;">
-            <label>Proxy URL</label>
-            <input type="text" id="proxyUrlInput" placeholder="https://...">
-          </div>
-        </div>
-
-        <!-- Appearance Section -->
-        <div class="settings-group">
-          <div class="settings-group-label">Appearance</div>
-          <div class="settings-row" style="cursor:default;">
-            <div class="settings-row-left">
-              <div class="settings-row-icon"><i class="fas fa-text-height"></i></div>
-              <div class="settings-row-text"><div class="settings-row-title">Font size</div></div>
-            </div>
-            <div class="settings-row-right">
-              <button class="theme-btn font-btn" data-size="sm" style="padding:0.4rem 0.7rem;">S</button>
-              <button class="theme-btn font-btn active" data-size="md" style="padding:0.4rem 0.7rem;">M</button>
-              <button class="theme-btn font-btn" data-size="lg" style="padding:0.4rem 0.7rem;">L</button>
-            </div>
-          </div>
-          <div class="settings-row" style="cursor:default;">
-            <div class="settings-row-left">
-              <div class="settings-row-icon"><i class="fas fa-palette"></i></div>
-              <div class="settings-row-text"><div class="settings-row-title">Accent color</div></div>
-            </div>
-            <div class="settings-row-right" style="gap:0.45rem;">
-              <button class="swatch active" data-accent="default" style="background:linear-gradient(135deg,#0d0d0d 50%,#f5f5f5 50%);" title="Default"></button>
-              <button class="swatch" data-accent="blue" style="background:#2d68ff;" title="Blue"></button>
-              <button class="swatch" data-accent="green" style="background:#22c55e;" title="Green"></button>
-              <button class="swatch" data-accent="purple" style="background:#8b5cf6;" title="Purple"></button>
-              <button class="swatch" data-accent="orange" style="background:#f59e0b;" title="Orange"></button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Chat Section -->
-        <div class="settings-group">
-          <div class="settings-group-label">Chat</div>
-          <div class="settings-row" style="cursor:default;">
-            <div class="settings-row-left">
-              <div class="settings-row-icon"><i class="fas fa-temperature-half"></i></div>
-              <div class="settings-row-text">
-                <div class="settings-row-title">Temperature</div>
-                <div class="settings-row-desc">Higher = more creative, lower = more precise</div>
-              </div>
-            </div>
-            <div class="settings-row-right">
-              <input type="range" id="temperatureSlider" min="0" max="1.5" step="0.1" style="width:110px;">
-              <span class="settings-row-value" id="temperatureValue">0.7</span>
-            </div>
-          </div>
-          <div class="settings-row" id="exportAllBtn">
-            <div class="settings-row-left">
-              <div class="settings-row-icon"><i class="fas fa-file-export"></i></div>
-              <div class="settings-row-text">
-                <div class="settings-row-title">Export all chats</div>
-                <div class="settings-row-desc">Download everything as Markdown</div>
-              </div>
-            </div>
-            <div class="settings-row-right"><i class="fas fa-chevron-right settings-row-chevron"></i></div>
-          </div>
-          <div class="settings-row" id="clearAllChatsBtn">
-            <div class="settings-row-left">
-              <div class="settings-row-icon" style="color:#ef4444;"><i class="fas fa-trash"></i></div>
-              <div class="settings-row-text">
-                <div class="settings-row-title" style="color:#ef4444;">Clear all chats</div>
-                <div class="settings-row-desc">Permanently delete chat history</div>
-              </div>
-            </div>
-            <div class="settings-row-right"><i class="fas fa-chevron-right settings-row-chevron"></i></div>
-          </div>
-        </div>
-
-        <!-- Advanced Settings: 30+ options -->
-        <div class="settings-group">
-          <div class="settings-group-label">Interface</div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-wand-magic-sparkles"></i></div><div class="settings-row-text"><div class="settings-row-title">Smooth animations</div><div class="settings-row-desc">Enable interface transitions</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="animations" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-layer-group"></i></div><div class="settings-row-text"><div class="settings-row-title">Compact chat</div><div class="settings-row-desc">Reduce spacing between messages</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="compactChat"><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-maximize"></i></div><div class="settings-row-text"><div class="settings-row-title">Wide chat layout</div><div class="settings-row-desc">Use more horizontal space</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="wideChat"><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-clock"></i></div><div class="settings-row-text"><div class="settings-row-title">Show message timestamps</div><div class="settings-row-desc">Display time under messages</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="timestamps" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-bars-staggered"></i></div><div class="settings-row-text"><div class="settings-row-title">Show sidebar search</div><div class="settings-row-desc">Keep chat search visible</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="sidebarSearch" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-arrows-rotate"></i></div><div class="settings-row-text"><div class="settings-row-title">Remember sidebar state</div><div class="settings-row-desc">Restore open or closed state</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="rememberSidebar" checked><span class="toggle-slider"></span></label></div></div>
-        </div>
-
-        <div class="settings-group">
-          <div class="settings-group-label">Messages</div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-markdown"></i></div><div class="settings-row-text"><div class="settings-row-title">Markdown rendering</div><div class="settings-row-desc">Format headings, lists, links and code</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="markdown" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-code"></i></div><div class="settings-row-text"><div class="settings-row-title">Syntax highlighting</div><div class="settings-row-desc">Improve code block readability</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="syntax" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-copy"></i></div><div class="settings-row-text"><div class="settings-row-title">Code copy buttons</div><div class="settings-row-desc">Show copy controls on code blocks</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="codeCopy" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-play"></i></div><div class="settings-row-text"><div class="settings-row-title">Code run buttons</div><div class="settings-row-desc">Show Run on HTML code blocks</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="codeRun" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-link"></i></div><div class="settings-row-text"><div class="settings-row-title">Clickable links</div><div class="settings-row-desc">Open Markdown links in a new tab</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="links" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-brain"></i></div><div class="settings-row-text"><div class="settings-row-title">Thinking panel</div><div class="settings-row-desc">Show available reasoning metadata</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="thinking" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-volume-high"></i></div><div class="settings-row-text"><div class="settings-row-title">Read aloud actions</div><div class="settings-row-desc">Keep text-to-speech controls</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="readAloud" checked><span class="toggle-slider"></span></label></div></div>
-        </div>
-
-        <div class="settings-group">
-          <div class="settings-group-label">Composer</div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-keyboard"></i></div><div class="settings-row-text"><div class="settings-row-title">Enter to send</div><div class="settings-row-desc">Press Enter to send a message</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="enterSend" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-file-lines"></i></div><div class="settings-row-text"><div class="settings-row-title">Save draft automatically</div><div class="settings-row-desc">Restore unfinished messages</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="drafts" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-paperclip"></i></div><div class="settings-row-text"><div class="settings-row-title">File upload previews</div><div class="settings-row-desc">Show attached files before sending</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="uploadPreviews" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-microphone"></i></div><div class="settings-row-text"><div class="settings-row-title">Voice input</div><div class="settings-row-desc">Enable microphone input when supported</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="voice" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-paste"></i></div><div class="settings-row-text"><div class="settings-row-title">Clipboard image paste</div><div class="settings-row-desc">Paste images directly into chat</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="pasteImages" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-arrows-up-down"></i></div><div class="settings-row-text"><div class="settings-row-title">Auto-grow composer</div><div class="settings-row-desc">Expand the message box while typing</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="autoGrow" checked><span class="toggle-slider"></span></label></div></div>
-        </div>
-
-        <div class="settings-group">
-          <div class="settings-group-label">HTML Preview</div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-rotate"></i></div><div class="settings-row-text"><div class="settings-row-title">Auto refresh preview</div><div class="settings-row-desc">Refresh preview after new HTML output</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="previewAutoRefresh" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-terminal"></i></div><div class="settings-row-text"><div class="settings-row-title">Preview console</div><div class="settings-row-desc">Capture console logs and runtime errors</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="previewConsole" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-mobile-screen"></i></div><div class="settings-row-text"><div class="settings-row-title">Responsive preview controls</div><div class="settings-row-desc">Allow mobile, tablet and desktop modes</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="previewDevices" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-lock"></i></div><div class="settings-row-text"><div class="settings-row-title">Sandbox HTML preview</div><div class="settings-row-desc">Keep generated pages isolated in an iframe</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="previewSandbox" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-download"></i></div><div class="settings-row-text"><div class="settings-row-title">Preview download</div><div class="settings-row-desc">Allow generated HTML to be downloaded</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="previewDownload" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-up-right-from-square"></i></div><div class="settings-row-text"><div class="settings-row-title">Open preview externally</div><div class="settings-row-desc">Allow opening generated pages in a new tab</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="previewExternal" checked><span class="toggle-slider"></span></label></div></div>
-        </div>
-
-        <div class="settings-group">
-          <div class="settings-group-label">Privacy & Storage</div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-floppy-disk"></i></div><div class="settings-row-text"><div class="settings-row-title">Local chat history</div><div class="settings-row-desc">Store conversations in this browser</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="localHistory" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-key"></i></div><div class="settings-row-text"><div class="settings-row-title">Remember API keys</div><div class="settings-row-desc">Keep provider keys in browser storage</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="rememberKeys" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-user-secret"></i></div><div class="settings-row-text"><div class="settings-row-title">Private mode</div><div class="settings-row-desc">Avoid saving new chat messages locally</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="privateMode"><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-trash-can"></i></div><div class="settings-row-text"><div class="settings-row-title">Clear drafts on send</div><div class="settings-row-desc">Remove the saved composer draft after sending</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="clearDrafts" checked><span class="toggle-slider"></span></label></div></div>
-        </div>
-
-        <div class="settings-group">
-          <div class="settings-group-label">Accessibility</div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-universal-access"></i></div><div class="settings-row-text"><div class="settings-row-title">Reduced motion</div><div class="settings-row-desc">Minimize animations and transitions</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="reducedMotion"><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-eye"></i></div><div class="settings-row-text"><div class="settings-row-title">High contrast</div><div class="settings-row-desc">Increase contrast for interface elements</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="highContrast"><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-keyboard"></i></div><div class="settings-row-text"><div class="settings-row-title">Keyboard navigation</div><div class="settings-row-desc">Improve focus visibility for keyboard users</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="keyboardNav" checked><span class="toggle-slider"></span></label></div></div>
-        </div>
-
-        <div class="settings-group">
-          <div class="settings-group-label">Behavior</div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-arrow-down"></i></div><div class="settings-row-text"><div class="settings-row-title">Auto-scroll during responses</div><div class="settings-row-desc">Follow streaming AI output automatically</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="autoScroll" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-bell"></i></div><div class="settings-row-text"><div class="settings-row-title">Response completion notification</div><div class="settings-row-desc">Notify when a long response finishes</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="completionNotify"><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-shield"></i></div><div class="settings-row-text"><div class="settings-row-title">Confirm destructive actions</div><div class="settings-row-desc">Ask before clearing chats or other data</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="confirmActions" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-history"></i></div><div class="settings-row-text"><div class="settings-row-title">Restore last chat</div><div class="settings-row-desc">Open your previous conversation on startup</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="restoreChat" checked><span class="toggle-slider"></span></label></div></div>
-          <div class="settings-row"><div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-mouse-pointer"></i></div><div class="settings-row-text"><div class="settings-row-title">Focus input after response</div><div class="settings-row-desc">Return the cursor to the composer automatically</div></div></div><div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="focusAfterResponse" checked><span class="toggle-slider"></span></label></div></div>
-        </div>
-
-        <!-- Shortcuts Section -->
-        <div class="settings-group">
-          <div class="settings-group-label">Keyboard Shortcuts</div>
-          <div class="settings-row" style="cursor:default;">
-            <div class="settings-row-text" style="flex:1;">
-              <div class="shortcut-list">
-                <div><span>New chat</span><span><kbd>Ctrl</kbd> + <kbd>K</kbd></span></div>
-                <div><span>Toggle sidebar</span><span><kbd>Ctrl</kbd> + <kbd>B</kbd></span></div>
-                <div><span>Open settings</span><span><kbd>Ctrl</kbd> + <kbd>E</kbd></span></div>
-                <div><span>Focus input</span><span><kbd>/</kbd></span></div>
-                <div><span>Close panels</span><span><kbd>Esc</kbd></span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ===== TOGGLE SIDEBAR BUTTON ===== -->
-  <button class="toggle-sidebar-btn" id="toggleSidebarBtn"><i class="fas fa-chevron-right"></i></button>
-
-  <!-- ===== SIDEBAR ===== -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-logo"><div class="sidebar-logo-icon">⧩</div>Spax AI</div>
-      <button class="close-sidebar-btn" id="closeSidebarBtn" title="Collapse sidebar"><i class="fas fa-angles-left"></i></button>
-    </div>
-
-    <!-- GLM style New Chat button -->
-    <button class="new-chat-btn" id="newChatBtn">
-      <i class="fas fa-plus"></i>
-      <span>New chat</span>
-      <span class="new-chat-kbd">Ctrl K</span>
-    </button>
-
-    <!-- GLM style Sidebar Navigation Buttons -->
-    <div class="sidebar-nav-group">
-      <button class="sidebar-nav-btn active" id="navChatsBtn">
-        <i class="fas fa-comment-dots"></i>
-        <span>Chats</span>
-        <span class="sidebar-nav-badge" id="chatCountBadge">0</span>
-      </button>
-      <a href="studio.html" class="sidebar-nav-btn" id="navStudioBtn" title="Spax AI Studio">
-        <i class="fas fa-cubes"></i>
-        <span>AI Studio</span>
-        <span class="sidebar-nav-badge accent">IDE</span>
-      </a>
-      <button class="sidebar-nav-btn" id="navExploreBtn" title="Explore Prompt Templates">
-        <i class="fas fa-compass"></i>
-        <span>Prompts</span>
-      </button>
-      <button class="sidebar-nav-btn" id="navSettingsQuickBtn" title="Open Settings & API Keys">
-        <i class="fas fa-sliders"></i>
-        <span>Settings</span>
-      </button>
-    </div>
-
-    <div class="sidebar-search"><i class="fas fa-search"></i><input id="chatSearchInput" placeholder="Search conversations..." autocomplete="off"></div>
-    <div class="chat-history" id="chatHistory"></div>
-    <div class="sidebar-footer">
-      <div id="sidebarGoogleSignin" style="flex:1;"><button class="google-btn" id="googleSigninBtn" title="Sign In & User Profile"><i class="fas fa-user-circle"></i> Sign in</button></div>
-      <div id="sidebarUserProfile" style="display:none;flex:1;position:relative;">
-        <div class="sidebar-user" id="userProfileBtn"><img id="sidebarUserAvatar" src="" alt="U"><span class="sidebar-user-name" id="sidebarUserName"></span></div>
-        <div class="signout-dropdown" id="signoutDropdown"><button class="signout-btn" id="signoutConfirmBtn"><i class="fas fa-sign-out-alt"></i> Sign out</button></div>
-      </div>
-      <button class="settings-btn-circle" id="sidebarSettingsBtn" title="Settings"><i class="fas fa-cog"></i></button>
-    </div>
-  </aside>
-
-  <!-- ===== MAIN CONTENT ===== -->
-  <div class="main-content">
-    <header class="chat-header">
-      <div class="brand">
-        <button class="mobile-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
-        <div class="header-brand-pill">
-          <div class="header-brand-icon">⧩</div>
-          <span class="header-brand-title">Spax AI</span>
-        </div>
-      </div>
-      <div class="header-right">
-        <button class="top-command-btn" id="commandPaletteBtn" type="button" title="Command palette (Ctrl+P)" aria-label="Open command palette">
-          <i class="fas fa-wand-magic-sparkles"></i>
+        <div id="gsiButtonContainer" style="display:flex;justify-content:center;margin-bottom:10px;min-height:0"></div>
+        <button type="button" class="google-brand-btn" id="googleDirectBtn">
+          <img src="https://www.google.com/favicon.ico" alt=""><span>Continue with Google</span>
         </button>
-        <span class="connection-dot" id="connectionDot" title="API status"></span>
+        <p class="auth-hint" id="gsiHint"></p>
+        <div class="auth-divider-line"><span>or</span></div>
+        <button type="button" class="btn-ghost" id="switchToEmailTabBtn"><i class="fas fa-envelope"></i> Sign in with Email</button>
       </div>
-    </header>
-    <div class="messages-container" id="messagesContainer"></div>
-    <div class="input-container">
-      <div class="input-wrapper">
-        <div class="input-row-top">
-          <textarea id="userInput" placeholder="Message Spax AI..." rows="1"></textarea>
+
+      <div class="auth-tab-pane" id="paneEmail">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <h3 id="emailFormHeader" style="font-size:14px;font-weight:650">Account Sign In</h3>
+          <button type="button" id="authModeToggleBtn" style="color:var(--accent);font-size:12px;font-weight:600">Need an account? Register</button>
         </div>
-  
-        <div class="input-row-bottom">
-          <div style="display:flex;align-items:center;gap:0.4rem;">
-            <div class="composer-model-wrap">
-              <button class="model-select-trigger" id="modelTrigger" type="button" title="Select AI Model">
-                <span id="selectedModelName">Spax AI</span>
-                <i class="fas fa-chevron-up" style="font-size:0.55rem;color:var(--text2);margin-left:0.2rem;"></i>
-              </button>
-              <div class="model-dropdown" id="modelDropdown"></div>
-            </div>
-            <button class="upload-btn" id="uploadBtn" title="Attach files"><i class="fas fa-paperclip"></i></button>
-            <button class="upload-btn" id="voiceBtn" title="Voice input"><i class="fas fa-microphone"></i></button>
+        <div class="auth-input-group hidden" id="registerNameGroup">
+          <label for="authNameInput">Full Name</label>
+          <input type="text" id="authNameInput" placeholder="Your name" autocomplete="name">
+        </div>
+        <div class="auth-input-group">
+          <label for="authEmailInput">Email Address</label>
+          <input type="email" id="authEmailInput" placeholder="name@example.com" autocomplete="email">
+        </div>
+        <div class="auth-input-group">
+          <label for="authPasswordInput">Password</label>
+          <input type="password" id="authPasswordInput" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button type="button" class="btn-primary" id="emailAuthSubmitBtn">
+          <i class="fas fa-right-to-bracket"></i> <span id="emailAuthBtnText">Sign In</span>
+        </button>
+        <div style="margin-top:12px;display:flex;justify-content:space-between;font-size:12px;color:var(--text2)">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="rememberMeCheckbox" checked> Remember me</label>
+          <span id="quickFillDemoBtn" style="color:var(--accent);cursor:pointer;font-weight:550">Quick Fill Demo</span>
+        </div>
+        <p class="auth-hint">Local demo account — stored only in this browser, not a real server login.</p>
+      </div>
+
+      <div class="auth-tab-pane" id="paneProfile">
+        <div style="text-align:center;margin-bottom:18px">
+          <div class="modal-avatar-preview" id="modalAvatarPreview"><i class="fas fa-user"></i></div>
+          <span style="font-size:12px;color:var(--text2)">Choose your avatar and display name</span>
+        </div>
+        <div style="margin-bottom:16px">
+          <label style="font-size:11.5px;font-weight:600;color:var(--text2);display:block;margin-bottom:8px">Preset Avatars</label>
+          <div class="avatar-presets" id="avatarPresetsList"></div>
+        </div>
+        <div class="auth-input-group">
+          <label for="profileNameInput">Display Name</label>
+          <input type="text" id="profileNameInput" placeholder="e.g. Batbleseed">
+        </div>
+        <div class="auth-input-group" style="margin-bottom:18px">
+          <label for="profileAvatarUrlInput">Custom Avatar Image URL (optional)</label>
+          <input type="url" id="profileAvatarUrlInput" placeholder="https://… direct image link">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-primary" id="saveProfileModalBtn" style="flex:1"><i class="fas fa-check"></i> Save Profile</button>
+          <button class="btn-ghost" id="quickGuestLoginBtn" type="button" style="width:auto;padding:10px 16px">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SETTINGS MODAL ===== -->
+<div class="settings-modal hidden" id="settingsModal">
+  <div class="settings-panel">
+    <div class="settings-header">
+      <button class="settings-close-btn" id="closeSettingsBtn" aria-label="Close settings"><i class="fas fa-arrow-left"></i></button>
+      <h2>Settings</h2>
+    </div>
+    <div class="settings-content">
+      <div class="settings-profile-card" id="settingsProfileCard">
+        <div class="settings-profile-avatar" id="settingsProfileAvatar"><i class="fas fa-user"></i></div>
+        <div class="settings-profile-name" id="settingsProfileName">Guest User</div>
+        <div class="settings-profile-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="profile-dropdown" id="profileDropdown">
+          <div class="profile-dropdown-item" id="profileSignInItem"><i class="fas fa-user-pen"></i> Edit Profile & Sign In</div>
+          <div class="profile-dropdown-item" id="profileEditNameItem"><i class="fas fa-pen"></i> Quick Name Change</div>
+          <div class="profile-dropdown-divider"></div>
+          <div class="profile-dropdown-item danger" id="profileSignOutItem"><i class="fas fa-right-from-bracket"></i> Sign out</div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">General</div>
+        <div class="settings-row" id="themeRow">
+          <div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-sun"></i></div>
+            <div class="settings-row-text"><div class="settings-row-title">Theme</div></div></div>
+          <div class="settings-row-right"><span class="settings-row-value" id="themeValue">Light</span><i class="fas fa-chevron-down settings-row-chevron"></i></div>
+        </div>
+        <div id="themeDropdown" class="hidden" style="padding:4px 4px 6px">
+          <div style="display:flex;gap:8px">
+            <button class="theme-btn active" data-theme="default" style="flex:1"><i class="fas fa-sun"></i> Light</button>
+            <button class="theme-btn" data-theme="dark" style="flex:1"><i class="fas fa-moon"></i> Dark</button>
           </div>
-          <div style="display:flex;align-items:center;gap:0.4rem;">
-            <span class="char-counter" id="charCounter">0</span>
-            <button class="stop-btn" id="stopBtn"><i class="fas fa-stop"></i></button>
-            <button class="send-btn" id="sendBtn"><i class="fas fa-arrow-up"></i></button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">API Keys</div>
+        <p class="api-note">Keys are stored locally in this browser and sent only to the provider you choose. No key? The built-in demo model works offline.</p>
+        <div id="providerCards"></div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">Features</div>
+        <div class="settings-row" style="cursor:default">
+          <div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-code"></i></div>
+            <div class="settings-row-text"><div class="settings-row-title">HTML Preview</div><div class="settings-row-desc">Display HTML content in a preview panel</div></div></div>
+          <div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" id="previewToggle" checked><span class="toggle-slider"></span></label></div>
+        </div>
+        <div class="settings-row" style="cursor:default">
+          <div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-shield-halved"></i></div>
+            <div class="settings-row-text"><div class="settings-row-title">CORS Proxy</div><div class="settings-row-desc">Route API requests through a proxy</div></div></div>
+          <div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" id="proxyToggle"><span class="toggle-slider"></span></label></div>
+        </div>
+        <div class="settings-input-item">
+          <label for="proxyUrlInput">Proxy URL — use {url} as placeholder</label>
+          <input type="text" id="proxyUrlInput" placeholder="https://my-proxy.example/?url={url}">
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">Appearance</div>
+        <div class="settings-row" style="cursor:default">
+          <div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-text-height"></i></div>
+            <div class="settings-row-text"><div class="settings-row-title">Font size</div></div></div>
+          <div class="settings-row-right">
+            <button class="theme-btn font-btn" data-size="sm" style="padding:5px 10px">S</button>
+            <button class="theme-btn font-btn active" data-size="md" style="padding:5px 10px">M</button>
+            <button class="theme-btn font-btn" data-size="lg" style="padding:5px 10px">L</button>
+          </div>
+        </div>
+        <div class="settings-row" style="cursor:default">
+          <div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-palette"></i></div>
+            <div class="settings-row-text"><div class="settings-row-title">Accent color</div></div></div>
+          <div class="settings-row-right" style="gap:7px">
+            <button class="swatch active" data-accent="default" style="background:linear-gradient(135deg,#18181b 50%,#f5f5f5 50%)" title="Default"></button>
+            <button class="swatch" data-accent="blue" style="background:#2563eb" title="Blue"></button>
+            <button class="swatch" data-accent="green" style="background:#16a34a" title="Green"></button>
+            <button class="swatch" data-accent="purple" style="background:#7c3aed" title="Purple"></button>
+            <button class="swatch" data-accent="orange" style="background:#ea580c" title="Orange"></button>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-
-  <!-- ===== POWER COMMAND PALETTE ===== -->
-  <div class="command-palette-backdrop" id="commandPaletteBackdrop">
-    <div class="command-palette" role="dialog" aria-modal="true" aria-label="Command palette">
-      <div class="command-search-wrap"><i class="fas fa-search"></i><input id="commandSearch" autocomplete="off" placeholder="Search commands..."><kbd>Esc</kbd></div>
-      <div class="command-list" id="commandList"></div>
-      <div class="command-footer"><span>Navigate</span><kbd>↑</kbd><kbd>↓</kbd><span>Run</span><kbd>Enter</kbd><span>Close</span><kbd>Esc</kbd></div>
-    </div>
-  </div>
-
-  <!-- ===== IMAGE LIGHTBOX ===== -->
-  <div class="image-lightbox" id="imageLightbox" aria-hidden="true">
-    <button class="lightbox-close" id="lightboxClose" aria-label="Close image"><i class="fas fa-times"></i></button>
-    <img id="lightboxImage" alt="Preview">
-  </div>
-  <!-- ===== PREVIEW PANEL ===== -->
-  <section class="preview-panel" id="previewPanel" aria-label="HTML Preview">
-    <div class="preview-topbar">
-      <div class="preview-brand"><i class="fas fa-code"></i><strong>Live Preview</strong><span id="previewStatus" class="preview-status">Ready</span></div>
-      <div class="preview-top-actions">
-        <button id="previewBackBtn" title="Back"><i class="fas fa-arrow-left"></i></button>
-        <button id="previewForwardBtn" title="Forward"><i class="fas fa-arrow-right"></i></button>
-        <button id="previewRefreshBtn" title="Refresh"><i class="fas fa-rotate-right"></i></button>
-        <button id="previewOpenEditorBtn" title="Open source"><i class="fas fa-file-code"></i></button>
-        <button id="previewExternalBtn" title="Open in new tab"><i class="fas fa-up-right-from-square"></i></button>
-        <button id="closePreviewBtn" title="Close"><i class="fas fa-xmark"></i></button>
-      </div>
-    </div>
-    <div class="preview-address-row">
-      <div class="preview-file-pill"><i class="fas fa-file-code"></i><span id="previewUrl">index.html</span></div>
-      <div class="preview-device-group" role="group" aria-label="Preview viewport">
-        <button class="preview-device active" data-preview-size="responsive" title="Responsive"><i class="fas fa-desktop"></i></button>
-        <button class="preview-device" data-preview-size="mobile" title="Mobile"><i class="fas fa-mobile-screen"></i></button>
-        <button class="preview-device" data-preview-size="tablet" title="Tablet"><i class="fas fa-tablet-screen-button"></i></button>
-        <button class="preview-device" data-preview-size="desktop" title="Desktop"><i class="fas fa-tv"></i></button>
-      </div>
-      <label class="preview-auto"><input type="checkbox" id="previewAutoRefresh" checked> Auto</label>
-    </div>
-    <div class="preview-workspace">
-      <div class="preview-stage" id="previewStage">
-        <div class="preview-device-frame" id="previewDeviceFrame">
-          <iframe class="preview-frame" id="previewFrame" title="Rendered HTML preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+      <div class="settings-group">
+        <div class="settings-group-label">Chat</div>
+        <div class="settings-row" style="cursor:default">
+          <div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-temperature-half"></i></div>
+            <div class="settings-row-text"><div class="settings-row-title">Temperature</div><div class="settings-row-desc">Higher = creative, lower = precise</div></div></div>
+          <div class="settings-row-right">
+            <input type="range" id="temperatureSlider" min="0" max="1.5" step="0.1" value="0.7" style="width:110px;accent-color:var(--accent)">
+            <span class="settings-row-value" id="temperatureValue">0.7</span>
+          </div>
+        </div>
+        <div class="settings-row" id="exportAllBtn">
+          <div class="settings-row-left"><div class="settings-row-icon"><i class="fas fa-file-export"></i></div>
+            <div class="settings-row-text"><div class="settings-row-title">Export all chats</div><div class="settings-row-desc">Download everything as Markdown</div></div></div>
+          <div class="settings-row-right"><i class="fas fa-chevron-right settings-row-chevron"></i></div>
+        </div>
+        <div class="settings-row" id="clearAllChatsBtn">
+          <div class="settings-row-left"><div class="settings-row-icon" style="color:var(--danger)"><i class="fas fa-trash"></i></div>
+            <div class="settings-row-text"><div class="settings-row-title" style="color:var(--danger)">Clear all chats</div><div class="settings-row-desc">Permanently delete chat history</div></div></div>
+          <div class="settings-row-right"><i class="fas fa-chevron-right settings-row-chevron"></i></div>
         </div>
       </div>
-      <aside class="preview-console" id="previewConsole">
-        <div class="preview-console-head"><strong>Console</strong><button id="clearPreviewConsole">Clear</button></div>
-        <div class="preview-console-body" id="previewConsoleBody"><div class="console-empty">Console output will appear here.</div></div>
-      </aside>
-    </div>
-    <div class="preview-bottom-bar">
-      <span><i class="fas fa-circle-check"></i> Sandboxed preview</span>
-      <button id="togglePreviewConsole">Console <span id="previewConsoleCount">0</span></button>
-      <button id="downloadPreviewBtn"><i class="fas fa-download"></i> Download HTML</button>
-    </div>
-  </section>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="notal-max.js" defer></script>
+      <div id="settingsGroups"><!-- all toggle groups rendered by JS --></div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">Keyboard Shortcuts</div>
+        <div class="shortcut-list" style="padding:0 4px">
+          <div><span>New chat</span><span><kbd>Ctrl</kbd> + <kbd>K</kbd></span></div>
+          <div><span>Toggle sidebar</span><span><kbd>Ctrl</kbd> + <kbd>B</kbd></span></div>
+          <div><span>Open settings</span><span><kbd>Ctrl</kbd> + <kbd>E</kbd></span></div>
+          <div><span>Command palette</span><span><kbd>Ctrl</kbd> + <kbd>P</kbd></span></div>
+          <div><span>Focus input</span><span><kbd>/</kbd></span></div>
+          <div><span>Close panels</span><span><kbd>Esc</kbd></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PROMPTS MODAL ===== -->
+<div class="settings-modal hidden" id="promptsModal">
+  <div class="settings-panel" style="max-width:560px">
+    <div class="settings-header">
+      <button class="settings-close-btn" id="closePromptsBtn" aria-label="Close"><i class="fas fa-arrow-left"></i></button>
+      <h2>Prompt Templates</h2>
+    </div>
+    <div class="settings-content"><div class="prompts-grid" id="promptsList"></div></div>
+  </div>
+</div>
+
+<!-- ===== SOURCE EDITOR MODAL ===== -->
+<div class="settings-modal hidden" id="editorModal" style="z-index:88">
+  <div class="settings-panel" style="max-width:720px">
+    <div class="settings-header">
+      <button class="settings-close-btn" id="closeEditorBtn" aria-label="Close"><i class="fas fa-arrow-left"></i></button>
+      <h2>Preview Source</h2>
+      <button class="btn-primary" id="editorApplyBtn" style="width:auto;margin-left:auto;padding:7px 14px;font-size:12.5px"><i class="fas fa-play"></i> Apply</button>
+    </div>
+    <div class="settings-content"><textarea class="editor-textarea" id="editorTextarea" spellcheck="false"></textarea></div>
+  </div>
+</div>
+
+<!-- ===== CONFIRM MODAL ===== -->
+<div class="settings-modal hidden" id="confirmModal" style="z-index:110">
+  <div class="confirm-panel">
+    <p id="confirmText">Are you sure?</p>
+    <div class="confirm-actions">
+      <button id="confirmCancelBtn">Cancel</button>
+      <button id="confirmOkBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<button class="toggle-sidebar-btn" id="toggleSidebarBtn" aria-label="Open sidebar"><i class="fas fa-chevron-right"></i></button>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo"><div class="sidebar-logo-icon">⧩</div>Spax AI</div>
+    <button class="close-sidebar-btn" id="closeSidebarBtn" title="Collapse sidebar"><i class="fas fa-angles-left"></i></button>
+  </div>
+  <button class="new-chat-btn" id="newChatBtn"><i class="fas fa-plus"></i><span>New chat</span><span class="new-chat-kbd">Ctrl K</span></button>
+  <div class="sidebar-nav-group">
+    <button class="sidebar-nav-btn active" id="navChatsBtn"><i class="fas fa-comment-dots"></i><span>Chats</span><span class="sidebar-nav-badge" id="chatCountBadge">0</span></button>
+    <a href="studio.html" class="sidebar-nav-btn" id="navStudioBtn" title="Spax AI Studio"><i class="fas fa-cubes"></i><span>AI Studio</span><span class="sidebar-nav-badge accent">IDE</span></a>
+    <button class="sidebar-nav-btn" id="navExploreBtn" title="Prompt templates"><i class="fas fa-compass"></i><span>Prompts</span></button>
+    <button class="sidebar-nav-btn" id="navSettingsQuickBtn" title="Settings & API keys"><i class="fas fa-sliders"></i><span>Settings</span></button>
+  </div>
+  <div class="sidebar-search" id="sidebarSearchRow"><i class="fas fa-search"></i><input id="chatSearchInput" placeholder="Search conversations…" autocomplete="off"></div>
+  <div class="chat-history" id="chatHistory"></div>
+  <div class="sidebar-footer">
+    <div id="sidebarGoogleSignin" style="flex:1"><button class="google-btn" id="googleSigninBtn"><i class="fas fa-user-circle"></i> Sign in</button></div>
+    <div id="sidebarUserProfile" style="display:none;flex:1;position:relative;min-width:0">
+      <div class="sidebar-user" id="userProfileBtn"><span class="avatar" id="sidebarUserAvatar"></span><span class="sidebar-user-name" id="sidebarUserName"></span></div>
+      <div class="signout-dropdown" id="signoutDropdown"><button class="signout-btn" id="signoutConfirmBtn"><i class="fas fa-right-from-bracket"></i> Sign out</button></div>
+    </div>
+    <button class="settings-btn-circle" id="sidebarSettingsBtn" title="Settings"><i class="fas fa-cog"></i></button>
+  </div>
+</aside>
+
+<!-- ===== MAIN ===== -->
+<div class="main-content">
+  <header class="chat-header">
+    <div class="brand">
+      <button class="mobile-menu-btn" id="menuToggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+      <div class="header-brand-pill"><div class="header-brand-icon">⧩</div><span>Spax AI</span></div>
+    </div>
+    <div class="header-right">
+      <button class="top-command-btn" id="commandPaletteBtn" title="Command palette (Ctrl+P)" aria-label="Command palette"><i class="fas fa-wand-magic-sparkles"></i></button>
+      <span class="connection-dot" id="connectionDot" title="API status"></span>
+    </div>
+  </header>
+  <div class="messages-container" id="messagesContainer" aria-live="polite"></div>
+  <div class="input-container">
+    <div class="input-wrapper">
+      <div class="attach-row hidden" id="attachRow"></div>
+      <div class="input-row-top"><textarea id="userInput" placeholder="Message Spax AI…" rows="1"></textarea></div>
+      <div class="input-row-bottom">
+        <div class="composer-left">
+          <div class="composer-model-wrap">
+            <button class="model-select-trigger" id="modelTrigger" type="button" title="Select AI model">
+              <span id="selectedModelName">Spax Demo</span><i class="fas fa-chevron-up" style="font-size:9px"></i>
+            </button>
+            <div class="model-dropdown" id="modelDropdown"></div>
+          </div>
+          <button class="upload-btn" id="uploadBtn" title="Attach files"><i class="fas fa-paperclip"></i></button>
+          <button class="upload-btn" id="voiceBtn" title="Voice input"><i class="fas fa-microphone"></i></button>
+        </div>
+        <div class="composer-right">
+          <span class="char-counter" id="charCounter">0</span>
+          <button class="stop-btn" id="stopBtn" title="Stop generating"><i class="fas fa-stop"></i></button>
+          <button class="send-btn" id="sendBtn" title="Send" disabled><i class="fas fa-arrow-up"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COMMAND PALETTE ===== -->
+<div class="command-palette-backdrop" id="commandPaletteBackdrop">
+  <div class="command-palette" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="command-search-wrap"><i class="fas fa-search"></i><input id="commandSearch" autocomplete="off" placeholder="Search commands…"><kbd>Esc</kbd></div>
+    <div class="command-list" id="commandList"></div>
+    <div class="command-footer"><span>Navigate</span><kbd>↑</kbd><kbd>↓</kbd><span>Run</span><kbd>Enter</kbd><span>Close</span><kbd>Esc</kbd></div>
+  </div>
+</div>
+
+<!-- ===== LIGHTBOX ===== -->
+<div class="image-lightbox" id="imageLightbox" aria-hidden="true">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Close image"><i class="fas fa-xmark"></i></button>
+  <img id="lightboxImage" alt="Preview">
+</div>
+
+<!-- ===== PREVIEW PANEL ===== -->
+<section class="preview-panel" id="previewPanel" aria-label="HTML Preview">
+  <div class="preview-topbar">
+    <div class="preview-brand"><i class="fas fa-code"></i><strong>Live Preview</strong><span id="previewStatus" class="preview-status">Ready</span></div>
+    <div class="preview-top-actions">
+      <button id="previewBackBtn" title="Back"><i class="fas fa-arrow-left"></i></button>
+      <button id="previewForwardBtn" title="Forward"><i class="fas fa-arrow-right"></i></button>
+      <button id="previewRefreshBtn" title="Refresh"><i class="fas fa-rotate-right"></i></button>
+      <button id="previewOpenEditorBtn" title="Edit source"><i class="fas fa-file-code"></i></button>
+      <button id="previewExternalBtn" title="Open in new tab"><i class="fas fa-up-right-from-square"></i></button>
+      <button id="closePreviewBtn" title="Close"><i class="fas fa-xmark"></i></button>
+    </div>
+  </div>
+  <div class="preview-address-row">
+    <div class="preview-file-pill"><i class="fas fa-file-code"></i><span id="previewUrl">index.html</span></div>
+    <div class="preview-device-group" id="previewDeviceGroup" role="group" aria-label="Preview viewport">
+      <button class="preview-device active" data-preview-size="responsive" title="Responsive"><i class="fas fa-desktop"></i></button>
+      <button class="preview-device" data-preview-size="mobile" title="Mobile"><i class="fas fa-mobile-screen"></i></button>
+      <button class="preview-device" data-preview-size="tablet" title="Tablet"><i class="fas fa-tablet-screen-button"></i></button>
+      <button class="preview-device" data-preview-size="desktop" title="Desktop"><i class="fas fa-tv"></i></button>
+    </div>
+    <label class="preview-auto"><input type="checkbox" id="previewAutoRefresh" checked style="accent-color:var(--accent)"> Auto</label>
+  </div>
+  <div class="preview-workspace">
+    <div class="preview-stage" id="previewStage">
+      <div class="preview-device-frame" id="previewDeviceFrame">
+        <iframe class="preview-frame" id="previewFrame" title="Rendered HTML preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+      </div>
+    </div>
+    <aside class="preview-console" id="previewConsole">
+      <div class="preview-console-head"><strong>Console</strong><button id="clearPreviewConsole">Clear</button></div>
+      <div class="preview-console-body" id="previewConsoleBody"><div class="console-empty">Console output will appear here.</div></div>
+    </aside>
+  </div>
+  <div class="preview-bottom-bar">
+    <span><i class="fas fa-circle-check"></i> Sandboxed preview</span>
+    <button id="togglePreviewConsole">Console <span id="previewConsoleCount">0</span></button>
+    <button id="downloadPreviewBtn"><i class="fas fa-download"></i> Download HTML</button>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+(function(){
+'use strict';
+/* ================= HELPERS ================= */
+const $=id=>document.getElementById(id), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const LS={get(k,f){try{const v=localStorage.getItem(k);return v==null?f:JSON.parse(v)}catch(e){return f}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const isMobile=()=>matchMedia('(max-width:860px)').matches;
+let toastTimer;
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2400);}
+function download(name,content,type){const b=new Blob([content],{type:type||'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+function confirmDlg(text,okLabel){
+  if(!settings.confirmActions)return Promise.resolve(true);
+  return new Promise(res=>{
+    $('confirmText').textContent=text;$('confirmOkBtn').textContent=okLabel||'Delete';
+    $('confirmModal').classList.remove('hidden');
+    const done=v=>{$('confirmModal').classList.add('hidden');$('confirmOkBtn').onclick=$('confirmCancelBtn').onclick=null;res(v);};
+    $('confirmOkBtn').onclick=()=>done(true);$('confirmCancelBtn').onclick=()=>done(false);
+  });
+}
+
+/* ================= CONFIG ================= */
+const GOOGLE_CLIENT_ID=''; // ← paste your Google OAuth Client ID here to enable real Google Sign-In
+const PROVIDERS=[
+ {id:'demo',name:'Spax Demo',demo:true,models:[{id:'demo',name:'Spax Demo',sub:'offline • no key needed'}]},
+ {id:'openrouter',name:'OpenRouter',base:'https://openrouter.ai/api/v1',ph:'sk-or-…',link:'https://openrouter.ai/keys',
+  models:[{id:'openai/gpt-4o-mini',name:'GPT-4o mini'},{id:'anthropic/claude-3.5-haiku',name:'Claude 3.5 Haiku'},{id:'deepseek/deepseek-chat',name:'DeepSeek V3'},{id:'meta-llama/llama-3.3-70b-instruct',name:'Llama 3.3 70B'}]},
+ {id:'openai',name:'OpenAI',base:'https://api.openai.com/v1',ph:'sk-…',link:'https://platform.openai.com/api-keys',
+  models:[{id:'gpt-4o-mini',name:'GPT-4o mini'},{id:'gpt-4o',name:'GPT-4o'}]},
+ {id:'groq',name:'Groq',base:'https://api.groq.com/openai/v1',ph:'gsk_…',link:'https://console.groq.com/keys',
+  models:[{id:'llama-3.3-70b-versatile',name:'Llama 3.3 70B'}]},
+ {id:'deepseek',name:'DeepSeek',base:'https://api.deepseek.com/v1',ph:'sk-…',link:'https://platform.deepseek.com/api_keys',
+  models:[{id:'deepseek-chat',name:'DeepSeek Chat'},{id:'deepseek-reasoner',name:'DeepSeek Reasoner'}]},
+ {id:'custom',name:'Custom (OpenAI-compatible)',custom:true,ph:'API key',models:[]}
+];
+const DEFAULTS={theme:'default',accent:'default',fontSize:'md',temperature:0.7,customBase:'',customModel:'',
+ preview:true,proxy:false,proxyUrl:'',
+ animations:true,compactChat:false,wideChat:false,timestamps:true,sidebarSearch:true,rememberSidebar:true,
+ markdown:true,syntax:true,codeCopy:true,codeRun:true,links:true,thinking:true,readAloud:true,
+ enterSend:true,drafts:true,uploadPreviews:true,voice:true,pasteImages:true,autoGrow:true,
+ previewAutoRefresh:true,previewConsole:true,previewDevices:true,previewSandbox:true,previewDownload:true,previewExternal:true,
+ localHistory:true,rememberKeys:true,privateMode:false,clearDrafts:true,
+ reducedMotion:false,highContrast:false,keyboardNav:true,
+ autoScroll:true,completionNotify:false,confirmActions:true,restoreChat:true,focusAfterResponse:true};
+const SETTING_GROUPS=[
+ {label:'Interface',items:[
+  ['animations','fa-wand-magic-sparkles','Smooth animations','Enable interface transitions'],
+  ['compactChat','fa-layer-group','Compact chat','Reduce spacing between messages'],
+  ['wideChat','fa-maximize','Wide chat layout','Use more horizontal space'],
+  ['timestamps','fa-clock','Show message timestamps','Display time under messages'],
+  ['sidebarSearch','fa-bars-staggered','Show sidebar search','Keep chat search visible'],
+  ['rememberSidebar','fa-arrows-rotate','Remember sidebar state','Restore open or closed state']]},
+ {label:'Messages',items:[
+  ['markdown','fab fa-markdown','Markdown rendering','Format headings, lists, links and code'],
+  ['syntax','fa-code','Syntax highlighting','Improve code block readability'],
+  ['codeCopy','fa-copy','Code copy buttons','Show copy controls on code blocks'],
+  ['codeRun','fa-play','Code run buttons','Show Run on HTML code blocks'],
+  ['links','fa-link','Clickable links','Open Markdown links in a new tab'],
+  ['thinking','fa-brain','Thinking panel','Show available reasoning metadata'],
+  ['readAloud','fa-volume-high','Read aloud actions','Keep text-to-speech controls']]},
+ {label:'Composer',items:[
+  ['enterSend','fa-keyboard','Enter to send','Press Enter to send a message'],
+  ['drafts','fa-file-lines','Save draft automatically','Restore unfinished messages'],
+  ['uploadPreviews','fa-paperclip','File upload previews','Show attached files before sending'],
+  ['voice','fa-microphone','Voice input','Enable microphone input when supported'],
+  ['pasteImages','fa-paste','Clipboard image paste','Paste images directly into chat'],
+  ['autoGrow','fa-arrows-up-down','Auto-grow composer','Expand the message box while typing']]},
+ {label:'HTML Preview',items:[
+  ['previewAutoRefresh','fa-rotate','Auto refresh preview','Refresh preview after new HTML output'],
+  ['previewConsole','fa-terminal','Preview console','Capture console logs and runtime errors'],
+  ['previewDevices','fa-mobile-screen','Responsive preview controls','Allow mobile, tablet and desktop modes'],
+  ['previewSandbox','fa-lock','Sandbox HTML preview','Keep generated pages isolated in an iframe'],
+  ['previewDownload','fa-download','Preview download','Allow generated HTML to be downloaded'],
+  ['previewExternal','fa-up-right-from-square','Open preview externally','Allow opening generated pages in a new tab']]},
+ {label:'Privacy & Storage',items:[
+  ['localHistory','fa-floppy-disk','Local chat history','Store conversations in this browser'],
+  ['rememberKeys','fa-key','Remember API keys','Keep provider keys in browser storage'],
+  ['privateMode','fa-user-secret','Private mode','Avoid saving chat messages locally'],
+  ['clearDrafts','fa-trash-can','Clear drafts on send','Remove the saved draft after sending']]},
+ {label:'Accessibility',items:[
+  ['reducedMotion','fa-universal-access','Reduced motion','Minimize animations and transitions'],
+  ['highContrast','fa-eye','High contrast','Increase contrast for interface elements'],
+  ['keyboardNav','fa-keyboard','Keyboard navigation','Improve focus visibility for keyboard users']]},
+ {label:'Behavior',items:[
+  ['autoScroll','fa-arrow-down','Auto-scroll during responses','Follow streaming AI output automatically'],
+  ['completionNotify','fa-bell','Completion notification','Notify when a long response finishes'],
+  ['confirmActions','fa-shield','Confirm destructive actions','Ask before clearing chats or other data'],
+  ['restoreChat','fa-history','Restore last chat','Open your previous conversation on startup'],
+  ['focusAfterResponse','fa-arrow-pointer','Focus input after response','Return the cursor to the composer']]}
+];
+const PROMPTS=[
+ ['fa-code','Build a UI','Minimal landing page','Create a minimal, responsive landing page in a single HTML file with clean typography.'],
+ ['fa-bug','Fix a bug','Debug my code','Find and fix the bug in this code, and explain what was wrong:\n\n'],
+ ['fa-graduation-cap','Explain simply','Like I\u2019m 13','Explain this concept simply, with a short example: '],
+ ['fa-language','Translate','EN ↔ ID','Translate the following text to Bahasa Indonesia (or English if already Indonesian):\n\n'],
+ ['fa-file-lines','Summarize','Key points','Summarize this text into 5 concise bullet points:\n\n'],
+ ['fa-lightbulb','Brainstorm','Project ideas','Give me 8 creative coding project ideas for a student developer.'],
+ ['fa-envelope','Write email','Polite & clear','Write a short, polite email about: '],
+ ['fa-table-cells','Make a table','Compare things','Make a Markdown comparison table of: ']
+];
+const AVATARS=['👤','🦊','🐼','🚀','🌙','⚡','🌿','🎧'];
+
+/* ================= STATE ================= */
+let settings=Object.assign({},DEFAULTS,LS.get('spax.settings',{}));
+let chats=LS.get('spax.chats',[]);
+let activeId=LS.get('spax.active',null);
+let keys=LS.get('spax.keys',{});
+let drafts=LS.get('spax.drafts',{});
+let model=LS.get('spax.model',{provider:'demo',id:'demo',name:'Spax Demo'});
+const GUEST={name:'Guest',preset:'👤',avatarUrl:'',provider:'guest',email:''};
+let profile=LS.get('spax.profile',null)||JSON.parse(sessionStorage.getItem('spax.profile')||'null')||Object.assign({},GUEST);
+let attachments=[],streaming=false,job=null,authMode='signin',selectedPreset=profile.preset||'👤';
+let recognition=null,listening=false,speakingBtn=null;
+const saveSettings=()=>LS.set('spax.settings',settings);
+const saveChats=()=>{if(settings.localHistory&&!settings.privateMode){LS.set('spax.chats',chats);LS.set('spax.active',activeId);}else{LS.del('spax.chats');LS.del('spax.active');}};
+const saveKeys=()=>settings.rememberKeys?LS.set('spax.keys',keys):LS.del('spax.keys');
+const saveDrafts=()=>settings.drafts?LS.set('spax.drafts',drafts):LS.del('spax.drafts');
+function saveProfile(persist){profile=Object.assign({},profile);if(persist===false){sessionStorage.setItem('spax.profile',JSON.stringify(profile));LS.del('spax.profile');}else{LS.set('spax.profile',profile);sessionStorage.removeItem('spax.profile');}}
+const activeChat=()=>chats.find(c=>c.id===activeId)||null;
+const providerOf=id=>PROVIDERS.find(p=>p.id===id)||PROVIDERS[0];
+
+/* ================= MARKDOWN ================= */
+const RE_CODE=/(\/\/[^\n]*|#[^\n]*|\/\*[\s\S]*?\*\/)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|(\b\d+(?:\.\d+)?\b)|\b(const|let|var|function|return|if|else|for|while|class|new|import|export|from|async|await|try|catch|throw|switch|case|break|continue|typeof|this|null|undefined|true|false|def|elif|lambda|pass|None|True|False|and|or|not|in|is|print|interface|type|public|private|static|void)\b/g;
+const RE_HTML=/(<![\s\S]*?>)|(<\/?[a-zA-Z][^<>]*?>)|("[^"]*"|'[^']*')/g;
+function highlight(code,lang){
+  if(!settings.syntax)return esc(code);
+  const html=/^(html|htm|xml|svg)$/i.test(lang||'');
+  const re=html?RE_HTML:RE_CODE;re.lastIndex=0;
+  let out='',last=0,m;
+  while((m=re.exec(code))){
+    out+=esc(code.slice(last,m.index));
+    const cls=html?(m[1]?'tok-c':m[2]?'tok-t':'tok-s'):(m[1]?'tok-c':m[2]?'tok-s':m[3]?'tok-n':'tok-k');
+    out+='<span class="'+cls+'">'+esc(m[0])+'</span>';last=re.lastIndex;
+  }
+  return out+esc(code.slice(last));
+}
+function codeBlockHTML(lang,code){
+  const runnable=settings.codeRun&&(/^(html|htm)$/i.test(lang)||/^\s*(<!doctype html|<html)/i.test(code));
+  return '<div class="code-block"><div class="code-head"><span class="code-lang">'+esc(lang||'code')+'</span><span class="code-actions">'+
+    (runnable?'<button data-act="run-code"><i class="fas fa-play"></i>Run</button>':'')+
+    (settings.codeCopy?'<button data-act="copy-code"><i class="fas fa-copy"></i>Copy</button>':'')+
+    '</span></div><pre><code>'+highlight(code,lang)+'</code></pre></div>';
+}
+function inlineMD(s){
+  s=s.replace(/`([^`\n]+)`/g,'<code>$1</code>')
+     .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+     .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?:;]|$)/g,'$1<em>$2</em>');
+  s=s.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,(m,t,u)=>settings.links?'<a href="'+u+'" target="_blank" rel="noopener noreferrer">'+t+'</a>':t);
+  return s;
+}
+function renderMarkdown(src){
+  if(!settings.markdown)return esc(src).replace(/\n/g,'<br>');
+  const blocks=[];
+  src=String(src).replace(/```([\w+-]*)\n?([\s\S]*?)(?:```|$)/g,(m,l,c)=>{blocks.push(codeBlockHTML(l,c.replace(/\n$/,'')));return '\u0000B'+(blocks.length-1)+'\u0000';});
+  const lines=esc(src).split('\n');let out='',para=[],list=null;
+  const flushP=()=>{if(para.length){out+='<p>'+inlineMD(para.join('<br>'))+'</p>';para=[];}};
+  const flushL=()=>{if(list){out+='</'+list+'>';list=null;}};
+  for(const raw of lines){
+    const line=raw;const bm=line.match(/^\u0000B(\d+)\u0000\s*$/);
+    if(bm){flushP();flushL();out+=blocks[+bm[1]];continue;}
+    if(/^\s*$/.test(line)){flushP();flushL();continue;}
+    let m;
+    if((m=line.match(/^(#{1,4})\s+(.*)/))){flushP();flushL();const h=m[1].length;out+='<h'+h+'>'+inlineMD(m[2])+'</h'+h+'>';continue;}
+    if(/^\s*(---|\*\*\*|___)\s*$/.test(line)){flushP();flushL();out+='<hr>';continue;}
+    if((m=line.match(/^\s*&gt;\s?(.*)/))){flushP();flushL();out+='<blockquote>'+inlineMD(m[1])+'</blockquote>';continue;}
+    if((m=line.match(/^\s*[-*]\s+(.*)/))){flushP();if(list!=='ul'){flushL();out+='<ul>';list='ul';}out+='<li>'+inlineMD(m[1])+'</li>';continue;}
+    if((m=line.match(/^\s*\d+[.)]\s+(.*)/))){flushP();if(list!=='ol'){flushL();out+='<ol>';list='ol';}out+='<li>'+inlineMD(m[1])+'</li>';continue;}
+    flushL();para.push(line);
+  }
+  flushP();flushL();return out;
+}
+
+/* ================= SETTINGS UI ================= */
+function renderSettingGroups(){
+  $('settingsGroups').innerHTML=SETTING_GROUPS.map(g=>
+    '<div class="settings-group"><div class="settings-group-label">'+g.label+'</div>'+
+    g.items.map(([key,icon,title,desc])=>
+      '<div class="settings-row" style="cursor:default"><div class="settings-row-left"><div class="settings-row-icon"><i class="'+(icon.startsWith('fab')?icon:'fas '+icon)+'"></i></div>'+
+      '<div class="settings-row-text"><div class="settings-row-title">'+title+'</div><div class="settings-row-desc">'+desc+'</div></div></div>'+
+      '<div class="settings-row-right"><label class="toggle-switch"><input type="checkbox" data-setting="'+key+'"><span class="toggle-slider"></span></label></div></div>'
+    ).join('')+'</div>').join('');
+}
+function applySettings(){
+  const b=document.body;
+  b.classList.toggle('dark',settings.theme==='dark');
+  ['blue','green','purple','orange'].forEach(a=>b.classList.toggle('accent-'+a,settings.accent===a));
+  b.classList.toggle('font-sm',settings.fontSize==='sm');
+  b.classList.toggle('font-lg',settings.fontSize==='lg');
+  b.classList.toggle('compact-chat',settings.compactChat);
+  b.classList.toggle('wide-chat',settings.wideChat);
+  b.classList.toggle('no-anim',!settings.animations);
+  b.classList.toggle('reduced-motion',settings.reducedMotion);
+  b.classList.toggle('high-contrast',settings.highContrast);
+  b.classList.toggle('keyboard-nav',settings.keyboardNav);
+  b.classList.toggle('show-timestamps',settings.timestamps);
+  $$('[data-setting]').forEach(cb=>cb.checked=!!settings[cb.dataset.setting]);
+  $$('.theme-btn[data-theme]').forEach(x=>x.classList.toggle('active',x.dataset.theme===settings.theme));
+  $$('.font-btn').forEach(x=>x.classList.toggle('active',x.dataset.size===settings.fontSize));
+  $$('.swatch').forEach(x=>x.classList.toggle('active',x.dataset.accent===settings.accent));
+  $('themeValue').textContent=settings.theme==='dark'?'Dark':'Light';
+  $('temperatureSlider').value=settings.temperature;$('temperatureValue').textContent=(+settings.temperature).toFixed(1);
+  $('previewToggle').checked=settings.preview;$('proxyToggle').checked=settings.proxy;$('proxyUrlInput').value=settings.proxyUrl;
+  $('previewAutoRefresh').checked=settings.previewAutoRefresh;
+  $('sidebarSearchRow').style.display=settings.sidebarSearch?'':'none';
+  $('voiceBtn').style.display=settings.voice?'':'none';
+  $('previewDeviceGroup').style.display=settings.previewDevices?'':'none';
+  $('downloadPreviewBtn').style.display=settings.previewDownload?'':'none';
+  $('previewExternalBtn').style.display=settings.previewExternal?'':'none';
+  $('togglePreviewConsole').style.display=settings.previewConsole?'':'none';
+  if(!settings.previewConsole)$('previewConsole').classList.remove('open');
+  const fr=$('previewFrame');
+  if(settings.previewSandbox)fr.setAttribute('sandbox','allow-scripts allow-forms allow-modals allow-popups allow-downloads');
+  else fr.removeAttribute('sandbox');
+  if(!settings.preview)closePreview();
+  if(!settings.autoGrow){$('userInput').style.height='42px';}else autoGrow();
+  updateConnectionDot();
+}
+function onSettingChanged(key){
+  saveSettings();applySettings();
+  if(key==='privateMode'&&settings.privateMode){LS.del('spax.chats');LS.del('spax.active');toast('Private mode on — chats won\u2019t be saved');}
+  if(key==='localHistory')saveChats();
+  if(key==='rememberKeys')saveKeys();
+  if(key==='drafts'&&!settings.drafts){drafts={};LS.del('spax.drafts');}
+  if(key==='completionNotify'&&settings.completionNotify&&'Notification'in window&&Notification.permission==='default')Notification.requestPermission();
+  if(key==='previewSandbox'&&preview.history.length)renderPreview();
+  if(!streaming)renderMessages();
+  renderModelDropdown();
+}
+
+/* ================= PROVIDERS & MODELS ================= */
+function renderProviderCards(){
+  $('providerCards').innerHTML=PROVIDERS.filter(p=>!p.demo).map(p=>{
+    const has=!!(keys[p.id]||'').trim();
+    return '<div class="provider-card"><div class="provider-head"><span class="provider-name">'+p.name+'</span>'+
+      '<span class="key-status'+(has?' ok':'')+'" id="keyStatus-'+p.id+'">'+(has?'Key set':'Not set')+'</span>'+
+      (p.link?'<a class="provider-link" href="'+p.link+'" target="_blank" rel="noopener">Get key <i class="fas fa-up-right-from-square" style="font-size:9px"></i></a>':'')+
+      '</div><div class="key-input-row"><input type="password" data-key="'+p.id+'" placeholder="'+p.ph+'" value="'+esc(keys[p.id]||'')+'" autocomplete="off">'+
+      '<button class="key-eye" data-eye="'+p.id+'" title="Show/hide"><i class="fas fa-eye"></i></button></div>'+
+      (p.custom?'<div class="custom-extra"><input data-custom="base" placeholder="Base URL, e.g. http://localhost:1234/v1" value="'+esc(settings.customBase)+'"><input data-custom="model" placeholder="Model ID" value="'+esc(settings.customModel)+'"></div>':'')+
+      '</div>';
+  }).join('');
+}
+function renderModelDropdown(){
+  let html='';
+  for(const p of PROVIDERS){
+    let models=p.models;
+    if(p.custom)models=settings.customModel?[{id:settings.customModel,name:settings.customModel,sub:settings.customBase||'set base URL in settings'}]:[];
+    if(!models.length)continue;
+    const ok=p.demo||!!(keys[p.id]||'').trim();
+    html+='<div class="model-group-label"><span class="key-dot'+(ok?' ok':'')+'"></span>'+p.name+'</div>';
+    html+=models.map(m=>{
+      const sel=model.provider===p.id&&model.id===m.id;
+      return '<button class="model-item" data-provider="'+p.id+'" data-id="'+esc(m.id)+'" data-name="'+esc(m.name)+'"><span>'+esc(m.name)+
+        (m.sub?'<div class="model-item-sub">'+esc(m.sub)+'</div>':'')+'</span>'+(sel?'<i class="fas fa-check"></i>':'')+'</button>';
+    }).join('');
+  }
+  $('modelDropdown').innerHTML=html;
+  $('selectedModelName').textContent=model.name;
+}
+function updateConnectionDot(){
+  const p=providerOf(model.provider),dot=$('connectionDot');
+  dot.classList.remove('warn','busy');
+  if(streaming){dot.classList.add('busy');dot.title='Generating…';return;}
+  if(p.demo){dot.title='Demo mode — works offline';return;}
+  const ok=(keys[p.id]||'').trim()&&(!p.custom||settings.customBase);
+  dot.classList.toggle('warn',!ok);
+  dot.title=ok?'Ready: '+p.name:'No API key for '+p.name+' — click to open Settings';
+}
+
+/* ================= HISTORY ================= */
+function renderHistory(){
+  const q=($('chatSearchInput').value||'').toLowerCase();
+  const list=chats.filter(c=>!q||c.title.toLowerCase().includes(q)||c.messages.some(m=>(m.content||'').toLowerCase().includes(q)));
+  $('chatCountBadge').textContent=chats.length;
+  if(!list.length){$('chatHistory').innerHTML='<div class="history-empty">'+(q?'No matches':'No conversations yet')+'</div>';return;}
+  const today=new Date().toDateString(),yest=new Date(Date.now()-864e5).toDateString();
+  const groups={'Today':[],'Yesterday':[],'Earlier':[]};
+  list.forEach(c=>{const d=new Date(c.created).toDateString();groups[d===today?'Today':d===yest?'Yesterday':'Earlier'].push(c);});
+  $('chatHistory').innerHTML=Object.entries(groups).filter(([,v])=>v.length).map(([label,items])=>
+    '<div class="history-label">'+label+'</div>'+items.map(c=>
+      '<div class="chat-item'+(c.id===activeId?' active':'')+'" data-chat="'+c.id+'"><span class="chat-item-title">'+esc(c.title)+'</span>'+
+      '<span class="chat-item-actions"><button data-chat-rename="'+c.id+'" title="Rename"><i class="fas fa-pen"></i></button>'+
+      '<button data-chat-delete="'+c.id+'" title="Delete"><i class="fas fa-trash"></i></button></span></div>').join('')
+  ).join('');
+}
+function newChat(){
+  if(streaming)stopGeneration();
+  const cur=activeChat();
+  if(cur&&cur.messages.length===0){focusInput();closeMobileSidebar();return;}
+  const c={id:uid(),title:'New chat',messages:[],created:Date.now()};
+  chats.unshift(c);activeId=c.id;saveChats();renderHistory();renderMessages();closeMobileSidebar();focusInput();
+}
+function setActiveChat(id){
+  if(streaming)stopGeneration();
+  stashDraft();activeId=id;saveChats();renderHistory();renderMessages();restoreDraft();closeMobileSidebar();
+}
+async function deleteChat(id){
+  if(!await confirmDlg('Delete this conversation? This cannot be undone.'))return;
+  chats=chats.filter(c=>c.id!==id);delete drafts[id];saveDrafts();
+  if(activeId===id)activeId=chats[0]?chats[0].id:null;
+  saveChats();renderHistory();renderMessages();toast('Conversation deleted');
+}
+function renameChat(id){
+  const c=chats.find(x=>x.id===id);if(!c)return;
+  const name=prompt('Rename conversation:',c.title);
+  if(name&&name.trim()){c.title=name.trim().slice(0,80);saveChats();renderHistory();}
+}
+
+/* ================= MESSAGES ================= */
+function fmtTime(ts){const d=new Date(ts);return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
+function avatarHTML(p){
+  const emoji=esc(p.preset||'👤');
+  if(p.avatarUrl)return '<img src="'+esc(p.avatarUrl)+'" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline\'"><span style="display:none">'+emoji+'</span>';
+  return '<span>'+emoji+'</span>';
+}
+function welcomeHTML(){
+  const demo=providerOf(model.provider).demo;
+  const chips=['Build a minimal landing page in HTML','Explain async/await simply','Help me fix a JavaScript bug','Ideas for a fun UI project'];
+  return '<div class="welcome"><div class="welcome-logo">⧩</div><h1>Spax AI</h1>'+
+    '<p>'+(demo?'Demo mode — add an API key in Settings to chat with real models.':'Connected to '+esc(providerOf(model.provider).name)+'. How can I help?')+'</p>'+
+    '<div class="suggestions">'+chips.map(c=>'<button class="suggestion" data-prompt="'+esc(c)+'">'+esc(c)+'</button>').join('')+'</div></div>';
+}
+function attachmentsHTML(m){
+  if(!m.attachments||!m.attachments.length)return '';
+  return '<div class="msg-attachments">'+m.attachments.map(a=>a.dataUrl?
+    '<img src="'+a.dataUrl+'" class="chat-img" alt="'+esc(a.name)+'">':
+    '<span class="file-tag"><i class="fas fa-file-lines"></i>'+esc(a.name)+'</span>').join('')+'</div>';
+}
+function msgHTML(m,idx,arr){
+  const time='<span class="msg-time">'+fmtTime(m.ts||Date.now())+'</span>';
+  if(m.role==='user'){
+    return '<div class="msg msg-user" data-idx="'+idx+'"><div style="min-width:0;max-width:100%"><div class="bubble">'+esc(m.content)+'</div>'+attachmentsHTML(m)+
+      '<div class="msg-meta">'+time+'<button class="msg-action" data-act="copy-msg" data-idx="'+idx+'" title="Copy"><i class="fas fa-copy"></i></button></div></div></div>';
+  }
+  const last=idx===arr.length-1;
+  let think='';
+  if(settings.thinking&&m.thinking)think='<details class="think"><summary>'+(m.streaming?'Thinking…':'Thought process')+'</summary><div class="think-body">'+esc(m.thinking)+'</div></details>';
+  const body=m.streaming?'<div class="md typing-cursor" data-stream></div>':'<div class="md'+(m.error?' msg-error':'')+'">'+renderMarkdown(m.content)+'</div>';
+  const actions=m.streaming?'':
+    '<button class="msg-action" data-act="copy-msg" data-idx="'+idx+'" title="Copy"><i class="fas fa-copy"></i></button>'+
+    (settings.readAloud?'<button class="msg-action" data-act="speak" data-idx="'+idx+'" title="Read aloud"><i class="fas fa-volume-high"></i></button>':'')+
+    (last&&!streaming?'<button class="msg-action" data-act="regen" title="Regenerate"><i class="fas fa-rotate-right"></i></button>':'');
+  return '<div class="msg msg-ai" data-idx="'+idx+'"><div class="msg-avatar">⧩</div><div class="msg-body">'+think+body+
+    '<div class="msg-meta">'+time+actions+'</div></div></div>';
+}
+function renderMessages(){
+  const c=activeChat();const box=$('messagesContainer');
+  if(!c||!c.messages.length){box.innerHTML=welcomeHTML();return;}
+  box.innerHTML='<div class="messages-inner">'+c.messages.map((m,i)=>msgHTML(m,i,c.messages)).join('')+'</div>';
+  scrollBottom(true);
+}
+function nearBottom(){const b=$('messagesContainer');return b.scrollHeight-b.scrollTop-b.clientHeight<90;}
+function scrollBottom(force){const b=$('messagesContainer');if(force||settings.autoScroll&&nearBottom())b.scrollTop=b.scrollHeight;}
+
+/* ================= COMPOSER ================= */
+function autoGrow(){const t=$('userInput');if(!settings.autoGrow)return;t.style.height='auto';t.style.height=Math.min(t.scrollHeight,200)+'px';}
+function updateComposer(){
+  const has=$('userInput').value.trim()||attachments.length;
+  $('charCounter').textContent=$('userInput').value.length;
+  $('sendBtn').style.display=streaming?'none':'flex';
+  $('stopBtn').style.display=streaming?'flex':'none';
+  $('sendBtn').disabled=!has||streaming;
+}
+function focusInput(){if(!isMobile())$('userInput').focus();}
+function stashDraft(){if(!settings.drafts||!activeId)return;const v=$('userInput').value;if(v)drafts[activeId]=v;else delete drafts[activeId];saveDrafts();}
+function restoreDraft(){$('userInput').value=(settings.drafts&&activeId&&drafts[activeId])||'';autoGrow();updateComposer();}
+function renderAttachments(){
+  const row=$('attachRow');
+  if(!attachments.length){row.classList.add('hidden');row.innerHTML='';return;}
+  row.classList.remove('hidden');
+  if(!settings.uploadPreviews){row.innerHTML='<span class="attach-chip"><i class="fas fa-paperclip"></i><span>'+attachments.length+' file(s) attached</span><button data-attach-clear title="Remove all"><i class="fas fa-xmark"></i></button></span>';return;}
+  row.innerHTML=attachments.map((a,i)=>'<span class="attach-chip">'+(a.dataUrl?'<img src="'+a.dataUrl+'" alt="">':'<i class="fas fa-file-lines"></i>')+
+    '<span>'+esc(a.name)+'</span><button data-attach-remove="'+i+'" title="Remove"><i class="fas fa-xmark"></i></button></span>').join('');
+}
+async function addFiles(files){
+  for(const f of files){
+    if(f.size>4*1024*1024){toast(f.name+' is over 4 MB — skipped');continue;}
+    if(f.type.startsWith('image/')){
+      const dataUrl=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f);});
+      attachments.push({name:f.name,type:f.type,dataUrl});
+    }else{
+      const text=await f.text().catch(()=>'');
+      attachments.push({name:f.name,type:f.type,text:text.slice(0,200000)});
+    }
+  }
+  renderAttachments();updateComposer();
+}
+
+/* ================= CHAT ENGINE ================= */
+const SYSTEM_PROMPT='You are Spax AI, a concise, friendly assistant. Use Markdown. When asked to build UI or HTML, reply with one complete, self-contained HTML code block (inline CSS/JS).';
+function buildAPIMessages(chat){
+  const p=providerOf(model.provider);
+  const vision=['openai','openrouter','custom'].includes(p.id);
+  return [{role:'system',content:SYSTEM_PROMPT}].concat(chat.messages.filter(m=>!m.streaming&&!m.error).map(m=>{
+    if(m.role==='user'){
+      let text=m.content||'';
+      (m.attachments||[]).forEach(a=>{if(a.text)text+='\n\nFile: '+a.name+'\n```\n'+a.text+'\n```';});
+      const imgs=(m.attachments||[]).filter(a=>a.dataUrl);
+      if(imgs.length&&vision)return {role:'user',content:[{type:'text',text:text||'(image attached)'}].concat(imgs.map(a=>({type:'image_url',image_url:{url:a.dataUrl}})))};
+      if(imgs.length)text+='\n\n['+imgs.length+' image(s) attached — this model cannot view images]';
+      return {role:'user',content:text};
+    }
+    return {role:'assistant',content:m.content||''};
+  }));
+}
+function lastUserText(chat){const m=[...chat.messages].reverse().find(x=>x.role==='user');return m?m.content:'';}
+function demoReply(prompt){
+  const p=(prompt||'').toLowerCase();
+  if(/html|landing|page|website|ui|button|preview|dashboard/.test(p)){
+    return ['Here\u2019s a minimal page — the **live preview** opens automatically, or press **Run** on the block:','',
+'```html','<!DOCTYPE html>','<html lang="en">','<head>','<meta charset="UTF-8">','<meta name="viewport" content="width=device-width, initial-scale=1">',
+'<title>Minimal</title>','<style>',
+'  body{margin:0;font-family:system-ui,sans-serif;background:#fafafa;color:#18181b;display:grid;place-items:center;min-height:100vh}',
+'  .card{text-align:center;padding:40px}',
+'  h1{font-size:28px;letter-spacing:-.02em;margin:0 0 8px}',
+'  p{color:#8b8b90;margin:0 0 24px}',
+'  button{background:#18181b;color:#fff;border:0;border-radius:10px;padding:11px 22px;font-size:14px;cursor:pointer}',
+'  button:hover{opacity:.85}',
+'</style>','</head>','<body>','<div class="card">',
+'  <h1>Less, but better.</h1>','  <p>A tiny page rendered inside Spax AI\u2019s sandboxed preview.</p>',
+'  <button id="b">Say hello</button>','</div>','<script>',
+'  console.log("Preview loaded ✔");',
+'  document.getElementById("b").onclick=()=>{console.log("Button clicked!");document.querySelector("p").textContent="Hello from the preview 👋";};',
+'<\/script>','</body>','</html>','```','',
+'Try the **device buttons**, **console**, and **edit source** in the preview toolbar.'].join('\n');
+  }
+  return ['### 👋 Demo mode','','You\u2019re chatting with the **built-in offline demo** — no API key needed. To use real models:','',
+'1. Open **Settings → API Keys**','2. Paste a key (OpenRouter, OpenAI, Groq, DeepSeek, or any OpenAI-compatible endpoint)','3. Pick a model from the composer\u2019s model menu','',
+'Everything here works: streaming, Markdown, syntax highlighting, and a sandboxed **live HTML preview**.','',
+'Try asking: *"make a minimal landing page"* ✨','',
+'```js','// Runs entirely in your browser','const spax = { streaming: true, preview: true, style: "minimal" };','```'].join('\n');
+}
+function setStreamingUI(on){streaming=on;updateComposer();updateConnectionDot();}
+function stopGeneration(){if(job){job.aborted=true;if(job.controller)job.controller.abort();}}
+async function runAI(chat,msg){
+  const p=providerOf(model.provider);
+  job={aborted:false,controller:null};
+  setStreamingUI(true);
+  const contentEl=document.querySelector('[data-stream]');
+  const thinkWrap=contentEl?contentEl.closest('.msg-body'):null;
+  let raf=false;
+  const paint=()=>{if(raf)return;raf=true;requestAnimationFrame(()=>{raf=false;
+    if(contentEl)contentEl.innerHTML=renderMarkdown(msg.content||'');
+    if(settings.thinking&&msg.thinking&&thinkWrap){
+      let d=thinkWrap.querySelector('.think');
+      if(!d){d=document.createElement('details');d.className='think';d.innerHTML='<summary>Thinking…</summary><div class="think-body"></div>';thinkWrap.prepend(d);}
+      d.querySelector('.think-body').textContent=msg.thinking;
+    }
+    scrollBottom();
+  });};
+  try{
+    if(p.demo){
+      const text=demoReply(lastUserText(chat));
+      for(const w of text.split(/(\s+)/)){if(job.aborted)break;msg.content+=w;paint();await sleep(14+Math.random()*22);}
+    }else{
+      const key=(keys[p.id]||'').trim();
+      const base=p.custom?settings.customBase.replace(/\/+$/,''):p.base;
+      if(!key||!base)throw new Error('No API key'+(p.custom?' / base URL':'')+' set for **'+p.name+'**. Open **Settings → API Keys**, add it, then try again. Or switch to **Spax Demo** to chat offline.');
+      let url=base+'/chat/completions';
+      if(settings.proxy&&settings.proxyUrl)url=settings.proxyUrl.includes('{url}')?settings.proxyUrl.replace('{url}',encodeURIComponent(url)):settings.proxyUrl+url;
+      job.controller=new AbortController();
+      const headers={'Content-Type':'application/json','Authorization':'Bearer '+key};
+      if(p.id==='openrouter'){headers['HTTP-Referer']=location.origin||'https://spax.local';headers['X-Title']='Spax AI';}
+      const res=await fetch(url,{method:'POST',headers,signal:job.controller.signal,
+        body:JSON.stringify({model:model.id,messages:buildAPIMessages(chat),temperature:+settings.temperature,stream:true})});
+      if(!res.ok){const t=await res.text().catch(()=>'');throw new Error('API error '+res.status+' — '+t.slice(0,220));}
+      const reader=res.body.getReader(),dec=new TextDecoder();let buf='';
+      while(true){
+        const {done,value}=await reader.read();if(done)break;
+        buf+=dec.decode(value,{stream:true});let i;
+        while((i=buf.indexOf('\n'))>=0){
+          const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
+          if(!line.startsWith('data:'))continue;
+          const data=line.slice(5).trim();if(data==='[DONE]')continue;
+          try{const j=JSON.parse(data);const d=(j.choices&&j.choices[0]&&j.choices[0].delta)||{};
+            if(d.reasoning_content)msg.thinking=(msg.thinking||'')+d.reasoning_content;
+            if(d.content)msg.content+=d.content;
+            if(d.content||d.reasoning_content)paint();
+          }catch(e){}
+        }
+      }
+    }
+  }catch(err){
+    if(err.name!=='AbortError'){msg.error=true;msg.content=(msg.content?msg.content+'\n\n':'')+'⚠️ '+err.message+'\n\nTip: if this is a CORS/network issue, enable **CORS Proxy** in Settings.';}
+  }
+  msg.streaming=false;
+  if(!msg.content&&!msg.error)msg.content='*(stopped)*';
+  if(chat.title==='New chat'){const t=lastUserText(chat);if(t)chat.title=t.slice(0,42)+(t.length>42?'…':'');}
+  job=null;setStreamingUI(false);saveChats();renderMessages();renderHistory();
+  const htmlMatch=!msg.error&&msg.content.match(/```(?:html|htm)\n([\s\S]*?)```/i);
+  if(htmlMatch&&settings.preview&&settings.previewAutoRefresh)openPreview(htmlMatch[1]);
+  if(settings.completionNotify&&document.hidden&&'Notification'in window&&Notification.permission==='granted')
+    new Notification('Spax AI',{body:'Response ready in "'+chat.title+'"'});
+  if(settings.focusAfterResponse)focusInput();
+}
+function sendMessage(){
+  if(streaming)return;
+  const text=$('userInput').value.trim();
+  if(!text&&!attachments.length)return;
+  let chat=activeChat();
+  if(!chat){chat={id:uid(),title:'New chat',messages:[],created:Date.now()};chats.unshift(chat);activeId=chat.id;}
+  chat.messages.push({role:'user',content:text,attachments:attachments.slice(),ts:Date.now()});
+  const msg={role:'assistant',content:'',streaming:true,ts:Date.now()};
+  chat.messages.push(msg);
+  $('userInput').value='';attachments=[];renderAttachments();
+  if(settings.clearDrafts&&activeId){delete drafts[activeId];saveDrafts();}
+  autoGrow();updateComposer();saveChats();renderMessages();renderHistory();
+  runAI(chat,msg);
+}
+function regenerate(){
+  const chat=activeChat();if(!chat||streaming)return;
+  if(chat.messages.length&&chat.messages[chat.messages.length-1].role==='assistant')chat.messages.pop();
+  if(!chat.messages.length)return;
+  const msg={role:'assistant',content:'',streaming:true,ts:Date.now()};
+  chat.messages.push(msg);saveChats();renderMessages();runAI(chat,msg);
+}
+
+/* ================= PREVIEW ================= */
+const preview={history:[],idx:-1,count:0};
+const CONSOLE_SNIPPET='<script>(function(){var send=function(l,a){try{parent.postMessage({spaxPreview:1,level:l,text:Array.prototype.map.call(a,function(x){try{return typeof x==="object"?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(" ")},"*")}catch(e){}};["log","info","warn","error","debug"].forEach(function(k){var o=console[k]?console[k].bind(console):function(){};console[k]=function(){send(k,arguments);o.apply(null,arguments)}});window.addEventListener("error",function(e){send("error",[e.message+" (line "+(e.lineno||"?")+")"])});window.addEventListener("unhandledrejection",function(e){send("error",["Unhandled promise: "+e.reason])});})();<\/script>';
+function currentPreviewHTML(){return preview.idx>=0?preview.history[preview.idx]:'';}
+function openPreview(html){
+  if(!settings.preview){toast('Enable HTML Preview in Settings first');return;}
+  if(preview.history[preview.idx]!==html){preview.history=preview.history.slice(0,preview.idx+1);preview.history.push(html);preview.idx=preview.history.length-1;}
+  document.body.classList.add('preview-open');
+  renderPreview();
+}
+function renderPreview(){
+  const fr=$('previewFrame');
+  if(settings.previewSandbox)fr.setAttribute('sandbox','allow-scripts allow-forms allow-modals allow-popups allow-downloads');
+  else fr.removeAttribute('sandbox');
+  fr.srcdoc=(settings.previewConsole?CONSOLE_SNIPPET:'')+currentPreviewHTML();
+  $('previewStatus').textContent='Live';$('previewStatus').classList.add('live');
+  $('previewUrl').textContent='index.html';
+  $('previewBackBtn').disabled=preview.idx<=0;
+  $('previewForwardBtn').disabled=preview.idx>=preview.history.length-1;
+  clearConsole();
+}
+function closePreview(){document.body.classList.remove('preview-open');}
+function clearConsole(){preview.count=0;$('previewConsoleCount').textContent='0';$('previewConsoleBody').innerHTML='<div class="console-empty">Console output will appear here.</div>';}
+window.addEventListener('message',e=>{
+  if(e.source!==$('previewFrame').contentWindow||!e.data||e.data.spaxPreview!==1)return;
+  const body=$('previewConsoleBody');
+  const empty=body.querySelector('.console-empty');if(empty)empty.remove();
+  const div=document.createElement('div');div.className='console-line '+(e.data.level==='debug'?'log':e.data.level);
+  div.textContent=e.data.text;body.appendChild(div);body.scrollTop=body.scrollHeight;
+  preview.count++;$('previewConsoleCount').textContent=preview.count;
+});
+
+/* ================= PROFILE / AUTH ================= */
+function renderProfile(){
+  const guest=profile.provider==='guest';
+  $('sidebarGoogleSignin').style.display=guest?'':'none';
+  $('sidebarUserProfile').style.display=guest?'none':'block';
+  $('sidebarUserAvatar').innerHTML=avatarHTML(profile);
+  $('sidebarUserName').textContent=profile.name;
+  $('settingsProfileAvatar').innerHTML=avatarHTML(profile);
+  $('settingsProfileName').textContent=guest?'Guest User':profile.name;
+  $('modalAvatarPreview').innerHTML=avatarHTML(Object.assign({},profile,{preset:selectedPreset,avatarUrl:$('profileAvatarUrlInput').value.trim()||profile.avatarUrl}));
+}
+function openProfileModal(tab){
+  $('profileModal').classList.remove('hidden');
+  $('profileNameInput').value=profile.provider==='guest'?'':profile.name;
+  $('profileAvatarUrlInput').value=profile.avatarUrl||'';
+  selectedPreset=profile.preset||'👤';
+  renderAvatarPresets();renderProfile();switchAuthTab(tab||'google');tryInitGoogle();
+}
+function switchAuthTab(tab){
+  $$('.auth-tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  $('paneGoogle').classList.toggle('active',tab==='google');
+  $('paneEmail').classList.toggle('active',tab==='email');
+  $('paneProfile').classList.toggle('active',tab==='profile');
+}
+function renderAvatarPresets(){
+  $('avatarPresetsList').innerHTML=AVATARS.map(a=>'<button class="avatar-preset'+(a===selectedPreset?' active':'')+'" data-preset="'+a+'">'+a+'</button>').join('');
+}
+function signOut(){profile=Object.assign({},GUEST);saveProfile(true);sessionStorage.removeItem('spax.profile');renderProfile();toast('Signed out');}
+async function hashPw(pw){
+  try{const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+  catch(e){let h=5381;for(const c of pw)h=(h*33)^c.charCodeAt(0);return 'd'+(h>>>0);}
+}
+let gsiInited=false;
+function tryInitGoogle(){
+  const hint=$('gsiHint');
+  if(!GOOGLE_CLIENT_ID){hint.textContent='Google Sign-In needs a Client ID — set GOOGLE_CLIENT_ID at the top of the script. Email or Profile tabs work without it.';$('googleDirectBtn').disabled=true;return;}
+  $('googleDirectBtn').disabled=false;hint.textContent='';
+  if(gsiInited||!window.google||!google.accounts||!google.accounts.id)return;
+  google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCredential});
+  google.accounts.id.renderButton($('gsiButtonContainer'),{theme:settings.theme==='dark'?'filled_black':'outline',size:'large',shape:'pill'});
+  gsiInited=true;
+}
+window.handleGoogleCredential=function(resp){
+  try{
+    const payload=JSON.parse(atob(resp.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    profile={name:payload.name||'Google User',email:payload.email||'',avatarUrl:payload.picture||'',preset:'👤',provider:'google'};
+    saveProfile(true);renderProfile();$('profileModal').classList.add('hidden');toast('Welcome, '+profile.name+'!');
+  }catch(e){toast('Google sign-in failed');}
+};
+
+/* ================= COMMAND PALETTE ================= */
+const COMMANDS=[
+ {icon:'fa-plus',label:'New chat',kbd:'Ctrl K',run:newChat},
+ {icon:'fa-bars',label:'Toggle sidebar',kbd:'Ctrl B',run:toggleSidebar},
+ {icon:'fa-sliders',label:'Open settings',kbd:'Ctrl E',run:()=>openSettings()},
+ {icon:'fa-user-pen',label:'Profile & sign in',run:()=>openProfileModal('profile')},
+ {icon:'fa-compass',label:'Prompt templates',run:()=>$('promptsModal').classList.remove('hidden')},
+ {icon:'fa-moon',label:'Toggle dark / light theme',run:()=>{settings.theme=settings.theme==='dark'?'default':'dark';saveSettings();applySettings();}},
+ {icon:'fa-layer-group',label:'Toggle compact chat',run:()=>{settings.compactChat=!settings.compactChat;onSettingChanged('compactChat');}},
+ {icon:'fa-maximize',label:'Toggle wide layout',run:()=>{settings.wideChat=!settings.wideChat;onSettingChanged('wideChat');}},
+ {icon:'fa-code',label:'Open last HTML preview',run:()=>{const c=activeChat();const m=c&&[...c.messages].reverse().find(x=>x.role==='assistant'&&/```(?:html|htm)\n/i.test(x.content||''));if(m)openPreview(m.content.match(/```(?:html|htm)\n([\s\S]*?)```/i)[1]);else toast('No HTML found in this chat');}},
+ {icon:'fa-file-export',label:'Export all chats (Markdown)',run:exportAll},
+ {icon:'fa-trash',label:'Clear all chats',run:clearAllChats},
+ {icon:'fa-keyboard',label:'Focus message input',kbd:'/',run:focusInput}
+];
+let cmdIdx=0,cmdFiltered=COMMANDS;
+function renderCommands(){
+  const q=$('commandSearch').value.toLowerCase();
+  cmdFiltered=COMMANDS.filter(c=>c.label.toLowerCase().includes(q));
+  cmdIdx=Math.min(cmdIdx,Math.max(0,cmdFiltered.length-1));
+  $('commandList').innerHTML=cmdFiltered.length?cmdFiltered.map((c,i)=>
+    '<button class="command-item'+(i===cmdIdx?' active':'')+'" data-cmd="'+i+'"><i class="fas '+c.icon+'"></i>'+esc(c.label)+(c.kbd?'<kbd>'+c.kbd+'</kbd>':'')+'</button>').join('')
+    :'<div class="history-empty">No commands found</div>';
+}
+function openPalette(){cmdIdx=0;$('commandSearch').value='';renderCommands();$('commandPaletteBackdrop').classList.add('open');setTimeout(()=>$('commandSearch').focus(),30);}
+function closePalette(){$('commandPaletteBackdrop').classList.remove('open');}
+function runCommand(i){const c=cmdFiltered[i];if(!c)return;closePalette();setTimeout(c.run,60);}
+
+/* ================= EXPORT / CLEAR ================= */
+function exportAll(){
+  if(!chats.length){toast('Nothing to export yet');return;}
+  const md='# Spax AI — Chat Export\n\n'+chats.map(c=>'## '+c.title+'\n\n'+c.messages.map(m=>
+    '**'+(m.role==='user'?(profile.name||'You'):'Spax AI')+':**\n\n'+(m.content||'')).join('\n\n---\n\n')).join('\n\n\n');
+  download('spax-chats-'+new Date().toISOString().slice(0,10)+'.md',md,'text/markdown');toast('Exported '+chats.length+' chat(s)');
+}
+async function clearAllChats(){
+  if(!chats.length){toast('No chats to clear');return;}
+  if(!await confirmDlg('Delete ALL conversations permanently?','Clear all'))return;
+  if(streaming)stopGeneration();
+  chats=[];activeId=null;drafts={};saveDrafts();saveChats();renderHistory();renderMessages();toast('All chats cleared');
+}
+
+/* ================= SIDEBAR / MODALS ================= */
+function toggleSidebar(){
+  if(isMobile())document.body.classList.toggle('sidebar-open');
+  else{document.body.classList.toggle('sidebar-closed');if(settings.rememberSidebar)LS.set('spax.sidebar',document.body.classList.contains('sidebar-closed')?'1':'0');}
+}
+function closeMobileSidebar(){document.body.classList.remove('sidebar-open');}
+function openSettings(){$('settingsModal').classList.remove('hidden');$('themeDropdown').classList.add('hidden');renderProviderCards();}
+function closeAllDropdowns(){$('modelDropdown').classList.remove('open');$('profileDropdown').classList.remove('open');$('signoutDropdown').classList.remove('open');}
+
+/* ================= VOICE / TTS ================= */
+function toggleVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('Voice input is not supported in this browser');return;}
+  if(listening){recognition&&recognition.stop();return;}
+  recognition=new SR();recognition.lang=navigator.language||'en-US';recognition.interimResults=true;
+  const base=$('userInput').value;
+  recognition.onresult=e=>{let t='';for(const r of e.results)t+=r[0].transcript;$('userInput').value=(base?base+' ':'')+t;autoGrow();updateComposer();};
+  recognition.onend=()=>{listening=false;$('voiceBtn').classList.remove('recording');};
+  recognition.onerror=e=>{listening=false;$('voiceBtn').classList.remove('recording');if(e.error!=='aborted')toast('Mic error: '+e.error);};
+  recognition.start();listening=true;$('voiceBtn').classList.add('recording');toast('Listening…');
+}
+function speak(text,btn){
+  if(!('speechSynthesis'in window)){toast('Text-to-speech not supported');return;}
+  if(speakingBtn){speechSynthesis.cancel();speakingBtn.classList.remove('speaking');if(speakingBtn===btn){speakingBtn=null;return;}}
+  const clean=text.replace(/```[\s\S]*?```/g,' code block ').replace(/[#*`>\[\]]/g,'');
+  const u=new SpeechSynthesisUtterance(clean);u.onend=()=>{btn.classList.remove('speaking');speakingBtn=null;};
+  speakingBtn=btn;btn.classList.add('speaking');speechSynthesis.speak(u);
+}
+
+/* ================= EVENTS ================= */
+function bindEvents(){
+  /* sidebar */
+  $('toggleSidebarBtn').onclick=toggleSidebar;
+  $('closeSidebarBtn').onclick=toggleSidebar;
+  $('menuToggle').onclick=()=>document.body.classList.add('sidebar-open');
+  $('sidebarOverlay').onclick=closeMobileSidebar;
+  $('mobilePreviewOverlay').onclick=closePreview;
+  $('newChatBtn').onclick=newChat;
+  $('navChatsBtn').onclick=()=>{closeMobileSidebar();focusInput();};
+  $('navExploreBtn').onclick=()=>{$('promptsModal').classList.remove('hidden');closeMobileSidebar();};
+  $('navSettingsQuickBtn').onclick=()=>{openSettings();closeMobileSidebar();};
+  $('sidebarSettingsBtn').onclick=()=>openSettings();
+  $('chatSearchInput').addEventListener('input',renderHistory);
+  $('chatHistory').addEventListener('click',e=>{
+    const del=e.target.closest('[data-chat-delete]');if(del){deleteChat(del.dataset.chatDelete);return;}
+    const ren=e.target.closest('[data-chat-rename]');if(ren){renameChat(ren.dataset.chatRename);return;}
+    const item=e.target.closest('[data-chat]');if(item)setActiveChat(item.dataset.chat);
+  });
+  $('googleSigninBtn').onclick=()=>openProfileModal('google');
+  $('userProfileBtn').onclick=e=>{e.stopPropagation();$('signoutDropdown').classList.toggle('open');};
+  $('signoutConfirmBtn').onclick=()=>{closeAllDropdowns();signOut();};
+  /* header */
+  $('commandPaletteBtn').onclick=openPalette;
+  $('connectionDot').onclick=()=>openSettings();
+  /* composer */
+  $('sendBtn').onclick=sendMessage;
+  $('stopBtn').onclick=stopGeneration;
+  $('uploadBtn').onclick=()=>$('fileUploadInput').click();
+  $('fileUploadInput').addEventListener('change',e=>{addFiles([...e.target.files]);e.target.value='';});
+  $('voiceBtn').onclick=toggleVoice;
+  $('attachRow').addEventListener('click',e=>{
+    const rm=e.target.closest('[data-attach-remove]');if(rm){attachments.splice(+rm.dataset.attachRemove,1);renderAttachments();updateComposer();return;}
+    if(e.target.closest('[data-attach-clear]')){attachments=[];renderAttachments();updateComposer();}
+  });
+  const input=$('userInput');
+  input.addEventListener('input',()=>{autoGrow();updateComposer();clearTimeout(input._dt);input._dt=setTimeout(stashDraft,350);});
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&settings.enterSend){e.preventDefault();sendMessage();}
+  });
+  input.addEventListener('paste',e=>{
+    if(!settings.pasteImages)return;
+    const imgs=[...(e.clipboardData&&e.clipboardData.items||[])].filter(i=>i.type.startsWith('image/')).map(i=>i.getAsFile()).filter(Boolean);
+    if(imgs.length){e.preventDefault();addFiles(imgs);}
+  });
+  $('modelTrigger').onclick=e=>{e.stopPropagation();$('profileDropdown').classList.remove('open');$('signoutDropdown').classList.remove('open');renderModelDropdown();$('modelDropdown').classList.toggle('open');};
+  $('modelDropdown').addEventListener('click',e=>{
+    const item=e.target.closest('.model-item');if(!item)return;
+    model={provider:item.dataset.provider,id:item.dataset.id,name:item.dataset.name};
+    LS.set('spax.model',model);closeAllDropdowns();renderModelDropdown();updateConnectionDot();
+    if(!activeChat()||!activeChat().messages.length)renderMessages();
+    toast('Model: '+model.name);
+  });
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('.composer-model-wrap'))$('modelDropdown').classList.remove('open');
+    if(!e.target.closest('#settingsProfileCard'))$('profileDropdown').classList.remove('open');
+    if(!e.target.closest('#sidebarUserProfile'))$('signoutDropdown').classList.remove('open');
+  });
+  /* messages delegation */
+  $('messagesContainer').addEventListener('click',e=>{
+    const chip=e.target.closest('[data-prompt]');if(chip){input.value=chip.dataset.prompt;autoGrow();updateComposer();sendMessage();return;}
+    const img=e.target.closest('.chat-img');if(img){$('lightboxImage').src=img.src;$('imageLightbox').classList.add('open');return;}
+    const btn=e.target.closest('[data-act]');if(!btn)return;
+    const act=btn.dataset.act;
+    if(act==='copy-code'){const code=btn.closest('.code-block').querySelector('code');navigator.clipboard.writeText(code.textContent).then(()=>toast('Code copied'));return;}
+    if(act==='run-code'){openPreview(btn.closest('.code-block').querySelector('code').textContent);return;}
+    const chat=activeChat();if(!chat)return;
+    const m=chat.messages[+btn.dataset.idx];
+    if(act==='copy-msg'&&m)navigator.clipboard.writeText(m.content||'').then(()=>toast('Copied'));
+    if(act==='speak'&&m)speak(m.content||'',btn);
+    if(act==='regen')regenerate();
+  });
+  /* settings */
+  $('closeSettingsBtn').onclick=()=>$('settingsModal').classList.add('hidden');
+  $('settingsModal').addEventListener('click',e=>{if(e.target===$('settingsModal'))$('settingsModal').classList.add('hidden');});
+  $('settingsModal').addEventListener('change',e=>{
+    const k=e.target.dataset.setting;
+    if(k){settings[k]=e.target.checked;onSettingChanged(k);}
+  });
+  $('themeRow').onclick=()=>$('themeDropdown').classList.toggle('hidden');
+  $$('.theme-btn[data-theme]').forEach(b=>b.onclick=()=>{settings.theme=b.dataset.theme;saveSettings();applySettings();});
+  $$('.font-btn').forEach(b=>b.onclick=()=>{settings.fontSize=b.dataset.size;saveSettings();applySettings();});
+  $$('.swatch').forEach(b=>b.onclick=()=>{settings.accent=b.dataset.accent;saveSettings();applySettings();});
+  $('temperatureSlider').addEventListener('input',e=>{settings.temperature=+e.target.value;$('temperatureValue').textContent=settings.temperature.toFixed(1);saveSettings();});
+  $('previewToggle').addEventListener('change',e=>{settings.preview=e.target.checked;saveSettings();applySettings();if(!streaming)renderMessages();});
+  $('proxyToggle').addEventListener('change',e=>{settings.proxy=e.target.checked;saveSettings();});
+  $('proxyUrlInput').addEventListener('input',e=>{settings.proxyUrl=e.target.value.trim();saveSettings();});
+  $('exportAllBtn').onclick=exportAll;
+  $('clearAllChatsBtn').onclick=clearAllChats;
+  $('settingsProfileCard').onclick=e=>{if(e.target.closest('.profile-dropdown'))return;$('profileDropdown').classList.toggle('open');};
+  $('profileSignInItem').onclick=()=>{closeAllDropdowns();$('settingsModal').classList.add('hidden');openProfileModal('profile');};
+  $('profileEditNameItem').onclick=()=>{closeAllDropdowns();const n=prompt('Display name:',profile.name);if(n&&n.trim()){profile.name=n.trim().slice(0,40);if(profile.provider==='guest')profile.provider='local';saveProfile(true);renderProfile();}};
+  $('profileSignOutItem').onclick=()=>{closeAllDropdowns();signOut();};
+  $('providerCards').addEventListener('input',e=>{
+    const k=e.target.dataset.key;
+    if(k!==undefined){keys[k]=e.target.value.trim();saveKeys();
+      const st=$('keyStatus-'+k);if(st){const has=!!keys[k];st.textContent=has?'Key set':'Not set';st.classList.toggle('ok',has);}
+      renderModelDropdown();updateConnectionDot();return;}
+    const c=e.target.dataset.custom;
+    if(c==='base'){settings.customBase=e.target.value.trim();saveSettings();renderModelDropdown();updateConnectionDot();}
+    if(c==='model'){settings.customModel=e.target.value.trim();saveSettings();renderModelDropdown();}
+  });
+  $('providerCards').addEventListener('click',e=>{
+    const eye=e.target.closest('[data-eye]');if(!eye)return;
+    const inp=$('providerCards').querySelector('[data-key="'+eye.dataset.eye+'"]');
+    inp.type=inp.type==='password'?'text':'password';
+    eye.innerHTML='<i class="fas fa-eye'+(inp.type==='text'?'-slash':'')+'"></i>';
+  });
+  /* profile modal */
+  $('closeProfileModalBtn').onclick=()=>$('profileModal').classList.add('hidden');
+  $('profileModal').addEventListener('click',e=>{if(e.target===$('profileModal'))$('profileModal').classList.add('hidden');});
+  $$('.auth-tab-btn').forEach(b=>b.onclick=()=>switchAuthTab(b.dataset.tab));
+  $('switchToEmailTabBtn').onclick=()=>switchAuthTab('email');
+  $('googleDirectBtn').onclick=()=>{if(gsiInited&&window.google)google.accounts.id.prompt();else tryInitGoogle();};
+  $('authModeToggleBtn').onclick=()=>{
+    authMode=authMode==='signin'?'register':'signin';
+    const reg=authMode==='register';
+    $('registerNameGroup').classList.toggle('hidden',!reg);
+    $('emailFormHeader').textContent=reg?'Create Account':'Account Sign In';
+    $('emailAuthBtnText').textContent=reg?'Register':'Sign In';
+    $('authModeToggleBtn').textContent=reg?'Have an account? Sign in':'Need an account? Register';
+  };
+  $('quickFillDemoBtn').onclick=()=>{$('authEmailInput').value='demo@spax.ai';$('authPasswordInput').value='demo1234';$('authNameInput').value='Demo User';toast('Demo credentials filled');};
+  $('emailAuthSubmitBtn').onclick=async()=>{
+    const email=$('authEmailInput').value.trim().toLowerCase(),pw=$('authPasswordInput').value;
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){toast('Enter a valid email');return;}
+    if(pw.length<6){toast('Password must be at least 6 characters');return;}
+    const accounts=LS.get('spax.accounts',{});const hash=await hashPw(pw);
+    if(authMode==='register'){
+      const name=$('authNameInput').value.trim()||email.split('@')[0];
+      accounts[email]={name,hash};LS.set('spax.accounts',accounts);
+      profile={name,email,avatarUrl:'',preset:'👤',provider:'email'};
+    }else{
+      const acc=accounts[email];
+      if(!acc||acc.hash!==hash){toast('Wrong email or password (local demo account)');return;}
+      profile={name:acc.name,email,avatarUrl:'',preset:'👤',provider:'email'};
+    }
+    saveProfile($('rememberMeCheckbox').checked);renderProfile();
+    $('profileModal').classList.add('hidden');toast('Welcome, '+profile.name+'!');
+  };
+  $('avatarPresetsList').addEventListener('click',e=>{
+    const b=e.target.closest('[data-preset]');if(!b)return;
+    selectedPreset=b.dataset.preset;$('profileAvatarUrlInput').value='';renderAvatarPresets();renderProfile();
+  });
+  $('profileAvatarUrlInput').addEventListener('input',renderProfile);
+  $('saveProfileModalBtn').onclick=()=>{
+    const name=$('profileNameInput').value.trim();
+    if(!name){toast('Enter a display name');return;}
+    profile=Object.assign({},profile,{name:name.slice(0,40),preset:selectedPreset,avatarUrl:$('profileAvatarUrlInput').value.trim(),provider:profile.provider==='guest'?'local':profile.provider});
+    saveProfile(true);renderProfile();toast('Profile saved');
+  };
+  $('quickGuestLoginBtn').onclick=()=>{signOut();$('profileNameInput').value='';$('profileAvatarUrlInput').value='';selectedPreset='👤';renderAvatarPresets();renderProfile();};
+  /* prompts */
+  $('closePromptsBtn').onclick=()=>$('promptsModal').classList.add('hidden');
+  $('promptsModal').addEventListener('click',e=>{if(e.target===$('promptsModal'))$('promptsModal').classList.add('hidden');});
+  $('promptsList').innerHTML=PROMPTS.map(([icon,title,desc,text],i)=>
+    '<button class="prompt-card" data-prompt-idx="'+i+'"><div class="prompt-card-title"><i class="fas '+icon+'"></i>'+title+'</div><div class="prompt-card-desc">'+desc+'</div></button>').join('');
+  $('promptsList').addEventListener('click',e=>{
+    const b=e.target.closest('[data-prompt-idx]');if(!b)return;
+    $('userInput').value=PROMPTS[+b.dataset.promptIdx][3];
+    $('promptsModal').classList.add('hidden');autoGrow();updateComposer();$('userInput').focus();
+  });
+  /* palette */
+  $('commandPaletteBackdrop').addEventListener('click',e=>{if(e.target===$('commandPaletteBackdrop'))closePalette();});
+  $('commandSearch').addEventListener('input',()=>{cmdIdx=0;renderCommands();});
+  $('commandSearch').addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'){e.preventDefault();cmdIdx=Math.min(cmdIdx+1,cmdFiltered.length-1);renderCommands();}
+    if(e.key==='ArrowUp'){e.preventDefault();cmdIdx=Math.max(cmdIdx-1,0);renderCommands();}
+    if(e.key==='Enter'){e.preventDefault();runCommand(cmdIdx);}
+  });
+  $('commandList').addEventListener('click',e=>{const b=e.target.closest('[data-cmd]');if(b)runCommand(+b.dataset.cmd);});
+  /* lightbox */
+  $('imageLightbox').onclick=()=>$('imageLightbox').classList.remove('open');
+  $('lightboxClose').onclick=()=>$('imageLightbox').classList.remove('open');
+  /* preview */
+  $('closePreviewBtn').onclick=closePreview;
+  $('previewRefreshBtn').onclick=()=>{if(preview.idx>=0)renderPreview();};
+  $('previewBackBtn').onclick=()=>{if(preview.idx>0){preview.idx--;renderPreview();}};
+  $('previewForwardBtn').onclick=()=>{if(preview.idx<preview.history.length-1){preview.idx++;renderPreview();}};
+  $('previewOpenEditorBtn').onclick=()=>{$('editorTextarea').value=currentPreviewHTML();$('editorModal').classList.remove('hidden');};
+  $('closeEditorBtn').onclick=()=>$('editorModal').classList.add('hidden');
+  $('editorApplyBtn').onclick=()=>{openPreview($('editorTextarea').value);$('editorModal').classList.add('hidden');toast('Preview updated');};
+  $('editorModal').addEventListener('click',e=>{if(e.target===$('editorModal'))$('editorModal').classList.add('hidden');});
+  $('previewExternalBtn').onclick=()=>{
+    if(!settings.previewExternal)return;
+    const b=new Blob([currentPreviewHTML()],{type:'text/html'});window.open(URL.createObjectURL(b),'_blank');
+  };
+  $('downloadPreviewBtn').onclick=()=>{if(settings.previewDownload)download('index.html',currentPreviewHTML(),'text/html');};
+  $('previewAutoRefresh').addEventListener('change',e=>{settings.previewAutoRefresh=e.target.checked;saveSettings();applySettings();});
+  $$('.preview-device').forEach(b=>b.onclick=()=>{
+    $$('.preview-device').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+    $('previewDeviceFrame').className='preview-device-frame '+(b.dataset.previewSize==='responsive'?'':b.dataset.previewSize);
+  });
+  $('togglePreviewConsole').onclick=()=>$('previewConsole').classList.toggle('open');
+  $('clearPreviewConsole').onclick=clearConsole;
+  /* confirm backdrop */
+  $('confirmModal').addEventListener('click',e=>{if(e.target===$('confirmModal'))$('confirmCancelBtn').click();});
+  /* keyboard shortcuts */
+  document.addEventListener('keydown',e=>{
+    const mod=e.ctrlKey||e.metaKey;
+    const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+    if(mod&&e.key.toLowerCase()==='k'){e.preventDefault();newChat();return;}
+    if(mod&&e.key.toLowerCase()==='b'){e.preventDefault();toggleSidebar();return;}
+    if(mod&&e.key.toLowerCase()==='e'){e.preventDefault();openSettings();return;}
+    if(mod&&e.key.toLowerCase()==='p'){e.preventDefault();openPalette();return;}
+    if(e.key==='/'&&!typing){e.preventDefault();focusInput();return;}
+    if(e.key==='Escape'){
+      if($('commandPaletteBackdrop').classList.contains('open'))return closePalette();
+      if($('imageLightbox').classList.contains('open'))return $('imageLightbox').classList.remove('open');
+      if(!$('confirmModal').classList.contains('hidden'))return $('confirmCancelBtn').click();
+      if(!$('editorModal').classList.contains('hidden'))return $('editorModal').classList.add('hidden');
+      if(!$('promptsModal').classList.contains('hidden'))return $('promptsModal').classList.add('hidden');
+      if(!$('profileModal').classList.contains('hidden'))return $('profileModal').classList.add('hidden');
+      if(!$('settingsModal').classList.contains('hidden'))return $('settingsModal').classList.add('hidden');
+      if(document.body.classList.contains('preview-open'))return closePreview();
+      if(document.body.classList.contains('sidebar-open'))return closeMobileSidebar();
+      closeAllDropdowns();
+    }
+  });
+  window.addEventListener('resize',()=>{if(!isMobile())closeMobileSidebar();});
+  window.addEventListener('beforeunload',()=>{stashDraft();saveChats();});
+}
+
+/* ================= INIT ================= */
+function init(){
+  renderSettingGroups();
+  applySettings();
+  renderProviderCards();
+  renderModelDropdown();
+  renderProfile();
+  bindEvents();
+  if(!isMobile()&&settings.rememberSidebar&&LS.get('spax.sidebar','0')==='1')document.body.classList.add('sidebar-closed');
+  if(!settings.restoreChat||!chats.find(c=>c.id===activeId))activeId=chats[0]?chats[0].id:null;
+  if(!settings.localHistory||settings.privateMode){/* keep in-memory only */}
+  renderHistory();renderMessages();restoreDraft();updateComposer();updateConnectionDot();
+  setInterval(tryInitGoogle,1500);setTimeout(()=>{if(GOOGLE_CLIENT_ID)tryInitGoogle();},800);
+}
+init();
+})();
+</script>
 </body>
 </html>
