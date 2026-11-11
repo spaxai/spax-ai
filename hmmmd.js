@@ -30,7 +30,7 @@
   const providers = [
     {
       id: "notalai-space",
-      name: "Notal AI",
+      name: "Spax AI",
       baseUrl: NOTAL_API_URL,
       keyHint: "No API key needed (Built-in)",
       needsProxy: false,
@@ -101,7 +101,7 @@
   const allModels = [
     {
       id: "notal-local",
-      name: "Notal AI",
+      name: "Spax AI",
       provider: "notalai-space",
       icon: "fa-brain",
       badge: "Default",
@@ -969,7 +969,7 @@
     if (!answer) {
 
       throw new Error(
-        "Notal AI returned no response."
+        "Spax AI returned no response."
       );
     }
 
